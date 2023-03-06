@@ -1,5 +1,5 @@
 import { Simulation } from "./Simulation";
-import { Boid } from "./objects/Boid";
+import { Boid, BoidId } from "./objects/Boid";
 import { GUI } from "dat.gui";
 import { Floor } from "./objects/Floor";
 import { SeparationRule } from "./rules/SeparationRule";
@@ -9,6 +9,7 @@ import { Bounds3D } from "./Bounds3D";
 import { WorldBoundaryRule } from "./rules/WorldBoundaryRule";
 import { CollisionAvoidanceRule } from "./rules/CollisionAvoidanceRule";
 import { Arena } from "./objects/Arena";
+import { ChangeOfLeadershipRule } from "./rules/ChangeOfLeadershipRule";
 
 export interface BoidSimulationParams {
     boidCount: number;
@@ -23,6 +24,7 @@ export class BoidSimulation extends Simulation {
     controlsGui: GUI;
 
     boids: Boid[] = [];
+    private nextBoidId: BoidId = 0;
 
     simParams: BoidSimulationParams = {
         boidCount: 50,
@@ -39,6 +41,7 @@ export class BoidSimulation extends Simulation {
         new AlignmentRule(1),
         new WorldBoundaryRule(10),
         new CollisionAvoidanceRule(10),
+        new ChangeOfLeadershipRule(1),
     ];
 
     constructor(params?: BoidSimulationParams) {
@@ -105,7 +108,7 @@ export class BoidSimulation extends Simulation {
         let difference = this.simParams.boidCount - this.boids.length;
         while (difference > 0) {
             // generate new boids
-            const boid = Boid.generateWithRandomPosAndVel();
+            const boid = Boid.generateWithRandomPosAndVel(this.newBoidId());
             this.addObjectToScene(boid.mesh);
             this.boids.push(boid);
             difference--;
@@ -120,6 +123,12 @@ export class BoidSimulation extends Simulation {
             this.removeObjectFromScene(boid.mesh);
             difference++;
         }
+    }
+
+    private newBoidId(): BoidId {
+        const id = this.nextBoidId;
+        this.nextBoidId++;
+        return id;
     }
 
     getBoidNeighbours(boid: Boid): Boid[] {

@@ -10,7 +10,6 @@ export interface RuleArguments {
 export interface RuleOptions {
     minWeight?: number;
     maxWeight?: number;
-    applyAfterVelocityCap?: boolean;
 }
 
 export abstract class Rule {
@@ -29,7 +28,7 @@ export abstract class Rule {
         this.weight = weight;
         this.minWeight = options?.minWeight ?? 0;
         this.maxWeight = options?.maxWeight ?? weight * 2;
-        this.applyAfterVelocityCap = options?.applyAfterVelocityCap ?? false;
+        this.applyAfterVelocityCap = false;
     }
 
     abstract calculateVector(thisBoid: Boid, args: RuleArguments): THREE.Vector3;

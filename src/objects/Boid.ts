@@ -9,7 +9,11 @@ export interface BoidOptions {
     velocity: THREE.Vector3;
 }
 
+export type BoidId = number;
+
 export class Boid {
+    readonly id: BoidId;
+
     mesh: THREE.Mesh;
 
     velocity: THREE.Vector3;
@@ -34,7 +38,8 @@ export class Boid {
      */
     private baseColour = { h: 0.602, s: 0.32, l: 0.3 };
 
-    constructor(options: BoidOptions) {
+    constructor(id: BoidId, options: BoidOptions) {
+        this.id = id;
         // model boids as a cone so we can see their direction
         const geometry = new THREE.ConeGeometry(1, 4);
         const material = new THREE.MeshBasicMaterial({ color: this.generateIndividualColour() });
@@ -62,15 +67,22 @@ export class Boid {
         return this.mesh.position;
     }
 
+    get velocityNormalised() {
+        return new THREE.Vector3().copy(this.velocity).normalize();
+    }
+
     /**
      * Factory method to generate a boid with random position and velocity.
      * Options can be passed to control the min/max bounds for the random generation.
      * For any bounds that aren't passed, sensible defaults are used.
      */
-    static generateWithRandomPosAndVel(options?: {
-        positionBounds?: Bounds3D;
-        velocityBounds?: Bounds3D;
-    }): Boid {
+    static generateWithRandomPosAndVel(
+        id: BoidId,
+        options?: {
+            positionBounds?: Bounds3D;
+            velocityBounds?: Bounds3D;
+        },
+    ): Boid {
         // default position and velocity bounds
         const minXPos = options?.positionBounds?.xMin ?? -100;
         const maxXPos = options?.positionBounds?.xMax ?? 100;
@@ -86,7 +98,7 @@ export class Boid {
         const minZVel = options?.velocityBounds?.zMin ?? -0.2;
         const maxZVel = options?.velocityBounds?.zMax ?? 0.2;
 
-        return new Boid({
+        return new Boid(id, {
             position: new THREE.Vector3(
                 Math.random() * (maxXPos - minXPos) + minXPos,
                 Math.random() * (maxYPos - minYPos) + minYPos,
