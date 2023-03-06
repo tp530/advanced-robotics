@@ -104,14 +104,22 @@ export class Boid {
         // point the void to face in the direction it's moving
         this.pointInDirection(this.velocity);
 
+        const nonCappedRuleVector = new THREE.Vector3();
+
         for (const rule of rules) {
             const ruleVector = rule.calculateVector(this, ruleArguments);
-            this.velocity.add(ruleVector);
+            if (rule.applyAfterVelocityCap) {
+                nonCappedRuleVector.add(ruleVector);
+            } else {
+                this.velocity.add(ruleVector);
+            }
         }
 
         if (this.velocity.length() > ruleArguments.simParams.maxSpeed) {
             this.velocity.setLength(ruleArguments.simParams.maxSpeed);
         }
+
+        this.velocity.add(nonCappedRuleVector);
 
         this.updateRandomBias(
             ruleArguments.simParams.randomnessPerTimestep,
