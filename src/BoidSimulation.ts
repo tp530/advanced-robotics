@@ -13,6 +13,7 @@ import { Arena } from "./objects/Arena";
 export interface BoidSimulationParams {
     boidCount: number;
     visibilityThreshold: number;
+    angularThreshold: number;
     maxSpeed: number;
     worldDimens: Bounds3D;
     randomnessPerTimestep: number;
@@ -27,6 +28,7 @@ export class BoidSimulation extends Simulation {
     simParams: BoidSimulationParams = {
         boidCount: 50,
         visibilityThreshold: 50,
+        angularThreshold: 90,
         maxSpeed: 0.5,
         worldDimens: Bounds3D.centredXZ(200, 200, 100),
         randomnessPerTimestep: 0.01,
@@ -57,6 +59,10 @@ export class BoidSimulation extends Simulation {
         this.controlsGui
             .add(this.simParams, "visibilityThreshold", 5, 100)
             .name("Visibility radius");
+        this.controlsGui
+            .add(this.simParams, "angularThreshold", 10, 180)
+            .name("Visibility angle");
+
 
         // controls to change level of randomness
         const randomnessGui = this.controlsGui.addFolder("Randomness");
@@ -128,7 +134,7 @@ export class BoidSimulation extends Simulation {
             if (otherBoid === boid) {
                 continue;
             }
-            if (boid.isOtherBoidVisible(otherBoid, this.simParams.visibilityThreshold)) {
+            if (boid.isOtherBoidVisible(otherBoid, this.simParams.visibilityThreshold, this.simParams.angularThreshold/180*Math.PI)) {
                 neighbours.push(otherBoid);
             }
         }

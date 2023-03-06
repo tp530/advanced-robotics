@@ -140,8 +140,15 @@ export class Boid {
         this.mesh.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), phi);
     }
 
-    isOtherBoidVisible(other: Boid, visibilityThreshold: number): boolean {
-        return this.position.distanceTo(other.position) < visibilityThreshold;
+    isOtherBoidVisible(other: Boid, visibilityThreshold: number, angularThreshold: number): boolean {
+        let distCond = this.position.distanceTo(other.position) < visibilityThreshold;
+        let otherPos = other.position.clone()
+        let thisPos = this.position.clone()
+        let angle = this.velocity.angleTo(otherPos.addScaledVector(thisPos, -1)) ?? 0
+        let angularCond = (angle < angularThreshold) ?? false;
+        //let angularCond = true
+        console.log(angularCond)
+        return distCond && angularCond;
     }
 
     updateRandomBias(randomnessPerTimestep: number, randomnessLimit: number) {
