@@ -82,7 +82,7 @@ export class ChangeOfLeaderBoid extends Boid {
             }
         }
 
-        this.capSpeed(ruleArguments.simParams.maxSpeed);
+        this.capSpeed(ruleArguments.simParams.maxSpeed * this.getLeaderMaxSpeedMultiplier());
 
         // add more randomness to leader boids
         const randomnessMultiplier = 4;
@@ -155,6 +155,15 @@ export class ChangeOfLeaderBoid extends Boid {
         }
         centre.divideScalar(neighbours.length);
         return centre;
+    }
+
+    private getLeaderMaxSpeedMultiplier(): number {
+        // allow a short burst of speed at the start of escaping
+        if (this.leaderTimestep < this.maxLeaderTimestep / 4) {
+            return 1 + (2 * this.leaderTimestep) / this.maxLeaderTimestep;
+        } else {
+            return 5 / 3 - (2 * this.leaderTimestep) / (3 * this.maxLeaderTimestep);
+        }
     }
 
     /**
