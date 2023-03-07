@@ -1,10 +1,21 @@
-import { Rule, RuleArguments } from "./Rule";
+import { Rule, RuleArguments, RuleOptions } from "./Rule";
 import * as THREE from "three";
 import { Boid } from "../objects/Boid";
 import { ChangeOfLeaderBoid, LeaderBoidStatus } from "../objects/ChangeOfLeaderBoid";
 
+export interface FollowLeaderRuleOptions extends RuleOptions {
+    followLeaderProbability?: number;
+}
+
 export class FollowLeaderRule extends Rule {
     readonly name = "Follow leader";
+
+    followLeaderProbability: number;
+
+    constructor(weight: number, options?: FollowLeaderRuleOptions) {
+        super(weight, options);
+        this.followLeaderProbability = options?.followLeaderProbability ?? 0.005;
+    }
 
     calculateVector(thisBoid: Boid, args: RuleArguments): THREE.Vector3 {
         if (!(thisBoid instanceof ChangeOfLeaderBoid)) {
@@ -44,7 +55,7 @@ export class FollowLeaderRule extends Rule {
         // previous if statement
         if (thisBoid.followingBoid === null) {
             // probability of following a leader
-            if (Math.random() > 0.995) {
+            if (Math.random() > 1 - this.followLeaderProbability) {
                 const index = Math.floor(Math.random() * visibleLeaders.length);
                 const newFollowingLeader = visibleLeaders[index];
                 thisBoid.followingBoid = newFollowingLeader.id;

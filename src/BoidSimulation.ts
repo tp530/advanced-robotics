@@ -34,7 +34,7 @@ export class BoidSimulation extends Simulation {
     private nextBoidId: BoidId = 0;
 
     simParams: BoidSimulationParams = {
-        boidCount: 50,
+        boidCount: 100,
         visibilityThreshold: 25,
         maxSpeed: 0.5,
         worldDimens: Bounds3D.centredXZ(200, 200, 100),
@@ -49,8 +49,7 @@ export class BoidSimulation extends Simulation {
         new AlignmentRule(1),
         new WorldBoundaryRule(10),
         new CollisionAvoidanceRule(10),
-        // new ChangeOfLeadershipRule(1),
-        new FollowLeaderRule(1),
+        new FollowLeaderRule(5),
     ];
 
     private readonly floor?: Floor;
