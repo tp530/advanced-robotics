@@ -14,7 +14,7 @@ export class AlignmentRule extends Rule {
         const alignment = new THREE.Vector3();
 
         for (const neighbour of args.neighbours) {
-            alignment.add(neighbour.actualVelocity);
+            alignment.add(neighbour.velocity);
         }
         alignment.divideScalar(args.neighbours.length);
 

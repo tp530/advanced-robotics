@@ -2,8 +2,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export class Simulation {
-    protected readonly scene: THREE.Scene;
-    protected renderer: THREE.WebGLRenderer;
+    private readonly scene: THREE.Scene;
+    private renderer: THREE.Renderer;
     private readonly camera: THREE.PerspectiveCamera;
     private controls: OrbitControls;
 
@@ -20,8 +20,6 @@ export class Simulation {
 
         // initialise renderer
         this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
 
@@ -92,13 +90,13 @@ export class Simulation {
     /**
      * Add a new object to the scene.
      */
-    addToScene(objects: THREE.Object3D<THREE.Event> | Array<THREE.Object3D<THREE.Event>>) {
-        if (Array.isArray(objects)) {
-            for (const obj of objects) {
-                this.scene.add(obj);
-            }
-        } else {
-            this.scene.add(objects);
+    addObjectToScene(object: THREE.Object3D<THREE.Event>) {
+        this.scene.add(object);
+    }
+
+    addObjectsToScene(objects: Array<THREE.Object3D<THREE.Event>>) {
+        for (const obj of objects) {
+            this.scene.add(obj);
         }
     }
 
