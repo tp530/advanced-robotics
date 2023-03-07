@@ -14,7 +14,7 @@ export class CohesionRule extends Rule {
         const centre = new THREE.Vector3();
         let weightSum = 0;
         for (const neighbour of args.neighbours) {
-            let weight = args.dropoff.fn(thisBoid.toOther(neighbour).length());
+            let weight = args.simParams.dropoffRule.fn(thisBoid.toOther(neighbour, args.simParams).length());
             centre.addScaledVector(neighbour.position, weight);
             weightSum += weight
         }

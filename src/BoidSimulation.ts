@@ -13,6 +13,7 @@ import { NoDropoff } from "./dropoffs/NoDropoff";
 import { ExponentialDropoff } from "./dropoffs/ExponentialDropoff";
 import { InversePropDropoff } from "./dropoffs/InversePropDropoff";
 import { ProportionalDropoff } from "./dropoffs/ProportionalDropoff";
+import { Dropoff } from "./dropoffs/Dropoff";
 
 export interface BoidSimulationParams {
     boidCount: number;
@@ -22,6 +23,8 @@ export interface BoidSimulationParams {
     worldDimens: Bounds3D;
     randomnessPerTimestep: number;
     randomnessLimit: number;
+    dropoffRule: Dropoff;
+    angularNoise: number;
 }
 
 export class BoidSimulation extends Simulation {
@@ -37,6 +40,8 @@ export class BoidSimulation extends Simulation {
         worldDimens: Bounds3D.centredXZ(200, 200, 100),
         randomnessPerTimestep: 0.01,
         randomnessLimit: 0.1,
+        dropoffRule: new NoDropoff(1),
+        angularNoise: 0
     };
 
     rules = [
@@ -53,6 +58,16 @@ export class BoidSimulation extends Simulation {
         new InversePropDropoff(1),
         new ProportionalDropoff(this.simParams.visibilityThreshold, 1)
     ]
+
+
+
+    enabledDropoff = {
+        0: true,
+        1: false,
+        2: false,
+        3: false
+    }
+    enabledDropoffKeys = [0, 1, 2, 3]
 
     constructor(params?: BoidSimulationParams) {
         super();
@@ -74,6 +89,10 @@ export class BoidSimulation extends Simulation {
             .add(this.simParams, "angularThreshold", 10, 180)
             .name("Visibility angle");
 
+        this.controlsGui
+            .add(this.simParams, "angularNoise", 0, 2, 0.01)
+            .name("Angular noise");
+
 
         // controls to change level of randomness
         const randomnessGui = this.controlsGui.addFolder("Randomness");
@@ -88,6 +107,17 @@ export class BoidSimulation extends Simulation {
         ruleWeightsGui.open();
         for (const rule of this.rules) {
             ruleWeightsGui.add(rule, "weight", rule.minWeight, rule.maxWeight, 0.1).name(rule.name);
+        }
+
+        const dropoffRulesGui = this.controlsGui.addFolder("Dropoff Rules");
+        dropoffRulesGui.open();
+
+
+
+        for (var i: number = 0; i<this.dropoffs.length; i++) {
+            let drop = this.dropoffs[i]
+            dropoffRulesGui.add(this.enabledDropoff, i.toString()).onChange((v) => {if (v) {this.simParams.dropoffRule = this.dropoffs[i]} this.enabledDropoffKeys.forEach(j => {this.enabledDropoff[j as keyof typeof this.enabledDropoff] = (i==j ? v : !v)});})
+            dropoffRulesGui.add(drop, "constant", drop.minConst, drop.maxConst, drop.constant).name(drop.name + " constant")
         }
 
         // add a floor to the simulation
@@ -107,7 +137,6 @@ export class BoidSimulation extends Simulation {
             boid.update(this.rules, {
                 neighbours: this.getBoidNeighbours(boid),
                 simParams: this.simParams,
-                dropoff: this.dropoffs[3],
             }),
         );
 

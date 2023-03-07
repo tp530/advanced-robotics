@@ -16,7 +16,7 @@ export class AlignmentRule extends Rule {
         let weightSum = 0;
 
         for (const neighbour of args.neighbours) {
-            let weight = args.dropoff.fn(thisBoid.toOther(neighbour).length());
+            let weight = args.simParams.dropoffRule.fn(thisBoid.toOther(neighbour, args.simParams).length());
             alignment.addScaledVector(neighbour.velocity, weight);
             weightSum += weight;
         }

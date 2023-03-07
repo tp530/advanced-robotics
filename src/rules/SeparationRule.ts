@@ -15,7 +15,7 @@ export class SeparationRule extends Rule {
         let weightSum = 0;
 
         for (const neighbour of args.neighbours) {
-            let weight = args.dropoff.fn(thisBoid.toOther(neighbour).length())
+            let weight = args.simParams.dropoffRule.fn(thisBoid.toOther(neighbour, args.simParams).length())
             const diff = new THREE.Vector3();
             diff.subVectors(thisBoid.position, neighbour.position);
             separation.addScaledVector(diff, weight);

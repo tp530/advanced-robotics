@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { Rule, RuleArguments } from "../rules/Rule";
 import { Bounds3D } from "../Bounds3D";
+import { Spherical, Vector3 } from "three";
+import { BoidSimulationParams } from "../BoidSimulation";
 
 export interface BoidOptions {
     // Initial boid position
@@ -169,7 +171,26 @@ export class Boid {
         }
     }
 
-    toOther(other: Boid): THREE.Vector3{
-        return this.position.clone().addScaledVector(other.position, -1)
+    private normal(mean: number, sd: number): number{
+        let s: number, u: number, v: number;
+
+        if (sd ==  0) return mean;
+
+        do {
+            u = Math.random() * 2 - 1;
+            v = Math.random() * 2 - 1;
+            s = u*u + v*v;
+        } while (s >= 1);
+        let norm = u * Math.sqrt(-2 * Math.log(s)/s);
+        
+        return sd * norm + mean
+    }
+
+    private addNoise(v: Spherical, sd: number){
+        return v.set(v.radius, this.normal(v.phi, sd), this.normal(v.theta, sd))
+    }
+
+    toOther(other: Boid, params: BoidSimulationParams): THREE.Vector3{
+        return (new Vector3).setFromSpherical(this.addNoise((new Spherical()).setFromVector3(this.position.clone().addScaledVector(other.position, -1)), params.angularNoise));
     }
 }
