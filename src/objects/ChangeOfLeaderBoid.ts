@@ -21,6 +21,8 @@ export interface ChangeOfLeaderBoidOptions extends BoidOptions {
     // The probability that a boid will become a leader in a given timestep, given
     // it meets all the other constraints.
     becomeLeaderProbability?: number;
+    // Whether to set the boids' colour based on their state
+    colourBoids?: boolean;
 }
 
 export class ChangeOfLeaderBoid extends Boid {
@@ -31,6 +33,8 @@ export class ChangeOfLeaderBoid extends Boid {
     private neighbourCountThreshold: number;
     private becomeLeaderProbability: number;
 
+    private readonly COLOUR_BOIDS: boolean;
+
     followingBoid: BoidId | null = null;
 
     constructor(id: BoidId, options: ChangeOfLeaderBoidOptions) {
@@ -39,6 +43,7 @@ export class ChangeOfLeaderBoid extends Boid {
         this.eccentricityThreshold = options?.eccentricityThreshold ?? 0.5;
         this.neighbourCountThreshold = options?.neighbourCountThreshold ?? 8;
         this.becomeLeaderProbability = options?.becomeLeaderProbability ?? 0.001;
+        this.COLOUR_BOIDS = options?.colourBoids ?? true;
     }
 
     update(rules: Rule[], ruleArguments: RuleArguments) {
@@ -50,13 +55,16 @@ export class ChangeOfLeaderBoid extends Boid {
             case LeaderBoidStatus.Leader: {
                 this.leaderTimestep++;
                 this.updateLeader(rules, ruleArguments);
-                this.setColour(new THREE.Color().setHSL(0.2, 1, 0.5));
+                if (this.COLOUR_BOIDS) {
+                    this.setColour(new THREE.Color().setHSL(0.2, 1, 0.5));
+                }
                 break;
             }
             case LeaderBoidStatus.NotLeader: {
                 this.updateNotLeader(rules, ruleArguments);
                 this.allowChanceToBecomeLeader(ruleArguments);
-                if (this.followingBoid !== null) {
+                // set colour of boid if we're following a leader
+                if (this.followingBoid !== null && this.COLOUR_BOIDS) {
                     this.setColour(new THREE.Color().setHSL(0, 0.8, 0.5));
                 }
                 break;
@@ -112,7 +120,11 @@ export class ChangeOfLeaderBoid extends Boid {
         ) {
             hasChanceOfEscaping = true;
         }
-        this.setColour(new THREE.Color().setHSL(0.7, 1, hasChanceOfEscaping ? 0.7 : 0.1));
+        // colour boids on the edge of the flock that have a chance of escaping,
+        // and all other boids default colour
+        if (this.COLOUR_BOIDS) {
+            this.setColour(new THREE.Color().setHSL(0.7, 1, hasChanceOfEscaping ? 0.7 : 0.1));
+        }
 
         if (hasChanceOfEscaping) {
             const isEscaping = Math.random() > 1 - this.becomeLeaderProbability;
