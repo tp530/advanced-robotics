@@ -9,12 +9,13 @@ import { Bounds3D } from "./Bounds3D";
 import { WorldBoundaryRule } from "./rules/WorldBoundaryRule";
 import { CollisionAvoidanceRule } from "./rules/CollisionAvoidanceRule";
 import { Arena } from "./objects/Arena";
-import { ChangeOfLeadershipRule } from "./rules/ChangeOfLeadershipRule";
+import { ChangeOfLeaderBoid } from "./objects/ChangeOfLeaderBoid";
 import { Water } from "./objects/Water";
 import { Sky } from "./objects/Sky";
 import * as THREE from "three";
 import { SunParams } from "./objects/Sun";
 import { ShaderMaterial } from "three";
+import { FollowLeaderRule } from "./rules/FollowLeaderRule";
 
 export interface BoidSimulationParams {
     boidCount: number;
@@ -34,7 +35,7 @@ export class BoidSimulation extends Simulation {
 
     simParams: BoidSimulationParams = {
         boidCount: 50,
-        visibilityThreshold: 50,
+        visibilityThreshold: 25,
         maxSpeed: 0.5,
         worldDimens: Bounds3D.centredXZ(200, 200, 100),
         photorealisticRendering: false,
@@ -48,7 +49,8 @@ export class BoidSimulation extends Simulation {
         new AlignmentRule(1),
         new WorldBoundaryRule(10),
         new CollisionAvoidanceRule(10),
-        new ChangeOfLeadershipRule(1),
+        // new ChangeOfLeadershipRule(1),
+        new FollowLeaderRule(1),
     ];
 
     private readonly floor?: Floor;
@@ -186,7 +188,7 @@ export class BoidSimulation extends Simulation {
 
         this.boids.map((boid) =>
             // boid.update(this.getBoidNeighbours(boid), this.steeringForceCoefficients),
-            boid.update(this.rules, {
+            boid.updateAndMove(this.rules, {
                 neighbours: this.getBoidNeighbours(boid),
                 simParams: this.simParams,
             }),
@@ -212,9 +214,7 @@ export class BoidSimulation extends Simulation {
         let difference = this.simParams.boidCount - this.boids.length;
         while (difference > 0) {
             // generate new boids
-            const boid = Boid.generateWithRandomPosAndVel(this.newBoidId(), {
-                photorealisticRendering: this.simParams.photorealisticRendering,
-            });
+            const boid = ChangeOfLeaderBoid.generateWithRandomPosAndVel(this.newBoidId());
             this.addToScene(boid.mesh);
             this.boids.push(boid);
             difference--;

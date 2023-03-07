@@ -8,7 +8,7 @@ export interface BoidOptions {
     position: THREE.Vector3;
     // Initial boid velocity
     velocity: THREE.Vector3;
-    photorealisticRendering: boolean;
+    photorealisticRendering?: boolean;
 }
 
 export type BoidId = number;
@@ -47,9 +47,14 @@ export class Boid {
 
         let material: Material;
         if (options.photorealisticRendering) {
-            material = new THREE.MeshStandardMaterial({ color: this.generateIndividualColour(options.photorealisticRendering), metalness: 1 });
+            material = new THREE.MeshStandardMaterial({
+                color: this.generateIndividualColour(options.photorealisticRendering),
+                metalness: 1,
+            });
         } else {
-            material = new THREE.MeshBasicMaterial({ color: this.generateIndividualColour(options.photorealisticRendering) });
+            material = new THREE.MeshBasicMaterial({
+                color: this.generateIndividualColour(options.photorealisticRendering ?? false),
+            });
         }
 
         this.mesh = new THREE.Mesh(geometry, material);
@@ -95,7 +100,7 @@ export class Boid {
         options?: {
             positionBounds?: Bounds3D;
             velocityBounds?: Bounds3D;
-            photorealisticRendering: boolean
+            photorealisticRendering: boolean;
         },
     ): Boid {
         // default position and velocity bounds
@@ -124,11 +129,11 @@ export class Boid {
                 Math.random() * (maxYVel - minYVel) + minYVel,
                 Math.random() * (maxZVel - minZVel) + minZVel,
             ),
-            photorealisticRendering: options !== undefined && options.photorealisticRendering
+            photorealisticRendering: options !== undefined && options.photorealisticRendering,
         });
     }
 
-    update(rules: Rule[], ruleArguments: RuleArguments) {
+    updateAndMove(rules: Rule[], ruleArguments: RuleArguments) {
         // point the void to face in the direction it's moving
         this.pointInDirection(this.velocity);
 
@@ -155,7 +160,13 @@ export class Boid {
         );
         this.velocity.add(this.randomBias);
 
-        // move the boid by its velocity vector
+        this.move();
+    }
+
+    /*
+     * move the boid by its velocity vector
+     */
+    move() {
         this.position.add(this.velocity);
     }
 
