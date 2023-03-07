@@ -188,7 +188,6 @@ export class BoidSimulation extends Simulation {
         this.updateBoidCount();
 
         this.boids.map((boid) =>
-            // boid.update(this.getBoidNeighbours(boid), this.steeringForceCoefficients),
             boid.update(this.rules, {
                 neighbours: this.getBoidNeighbours(boid),
                 simParams: this.simParams,
