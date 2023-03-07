@@ -16,6 +16,8 @@ export type BoidId = number;
 export class Boid {
     readonly id: BoidId;
 
+    private readonly isPhotorealisticRendering: boolean;
+
     mesh: THREE.Mesh;
 
     velocity: THREE.Vector3;
@@ -42,18 +44,19 @@ export class Boid {
 
     constructor(id: BoidId, options: BoidOptions) {
         this.id = id;
+        this.isPhotorealisticRendering = options.photorealisticRendering ?? false;
         // model boids as a cone so we can see their direction
         const geometry = new THREE.ConeGeometry(1, 4);
 
         let material: Material;
-        if (options.photorealisticRendering) {
+        if (this.isPhotorealisticRendering) {
             material = new THREE.MeshStandardMaterial({
-                color: this.generateIndividualColour(options.photorealisticRendering),
+                color: this.generateIndividualColour(),
                 metalness: 1,
             });
         } else {
             material = new THREE.MeshBasicMaterial({
-                color: this.generateIndividualColour(options.photorealisticRendering ?? false),
+                color: this.generateIndividualColour(),
             });
         }
 
@@ -66,9 +69,9 @@ export class Boid {
     /**
      * Randomly generate a version of `this.baseColour`, with lightness adjusted.
      */
-    private generateIndividualColour(photorealisticRendering: boolean) {
+    private generateIndividualColour() {
         let lightnessAdjust: number;
-        if (photorealisticRendering) {
+        if (this.isPhotorealisticRendering) {
             lightnessAdjust = Math.random() * 0.8;
         } else {
             lightnessAdjust = Math.random() * 0.4 - 0.2;
@@ -80,6 +83,18 @@ export class Boid {
         l = Math.min(l, 1);
 
         return new THREE.Color().setHSL(this.baseColour.h, this.baseColour.s, l);
+    }
+
+    /**
+     * Set the colour of this boid. Useful, for example, for showing the
+     * state of different boids.
+     */
+    setColour(colour: THREE.Color) {
+        if (this.isPhotorealisticRendering) {
+            (this.mesh.material as THREE.MeshStandardMaterial).color = colour;
+        } else {
+            (this.mesh.material as THREE.MeshBasicMaterial).color = colour;
+        }
     }
 
     get position() {

@@ -53,21 +53,14 @@ export class ChangeOfLeaderBoid extends Boid {
             case LeaderBoidStatus.Leader: {
                 this.leaderTimestep++;
                 this.updateLeader(rules, ruleArguments);
-                (this.mesh.material as THREE.MeshBasicMaterial).color = new THREE.Color().setHSL(
-                    0.2,
-                    1,
-                    0.5,
-                );
-
-                // TODO make sure to still run collision avoidance rules -- maybe add a "rule type"
+                this.setColour(new THREE.Color().setHSL(0.2, 1, 0.5));
                 break;
             }
             case LeaderBoidStatus.NotLeader: {
                 this.updateNotLeader(rules, ruleArguments);
                 this.allowChanceToBecomeLeader(ruleArguments);
                 if (this.followingBoid !== null) {
-                    (this.mesh.material as THREE.MeshBasicMaterial).color =
-                        new THREE.Color().setHSL(0, 0.8, 0.5);
+                    this.setColour(new THREE.Color().setHSL(0, 0.8, 0.5));
                 }
                 break;
             }
@@ -106,11 +99,7 @@ export class ChangeOfLeaderBoid extends Boid {
         ) {
             hasChanceOfEscaping = true;
         }
-        (this.mesh.material as THREE.MeshBasicMaterial).color = new THREE.Color().setHSL(
-            0.7,
-            1,
-            hasChanceOfEscaping ? 0.7 : 0.1,
-        );
+        this.setColour(new THREE.Color().setHSL(0.7, 1, hasChanceOfEscaping ? 0.7 : 0.1));
 
         if (hasChanceOfEscaping) {
             const isEscaping = Math.random() > 1 - this.becomeLeaderProbability;
