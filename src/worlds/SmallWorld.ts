@@ -1,11 +1,11 @@
 import { World } from "../objects/World";
 
-export const defaultWorld = new World({
-    name: "Default",
+export const smallWorld = new World({
+    name: "Small World",
     dimensions: {
-        x: 200,
-        y: 200,
-        z: 100
+        x: 100,
+        y: 100,
+        z: 50
     },
     obstacles: {
         cylinders: [

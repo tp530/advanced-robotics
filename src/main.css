@@ -1,3 +1,19 @@
 body {
     margin: 0;
 }
+
+div.dg select {
+    color: #2ea1d6;
+    background-color: #303030;
+    border: none;
+    height: 19px;
+    line-height: 19px;
+    padding: 0 2px;
+    margin: 0 0 0 -5px;
+    border-radius: 0;
+    width: 66%;
+}
+
+div.dg li.cr.string {
+    border-left-color: #2ea1d6;
+}

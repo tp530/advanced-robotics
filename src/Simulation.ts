@@ -102,7 +102,13 @@ export class Simulation {
         }
     }
 
-    removeObjectFromScene(object: THREE.Object3D<THREE.Event>) {
-        this.scene.remove(object);
+    removeFromScene(objects: THREE.Object3D<THREE.Event> | Array<THREE.Object3D<THREE.Event>>) {
+        if (Array.isArray(objects)) {
+            for (const obj of objects) {
+                this.scene.remove(obj);
+            }
+        } else {
+            this.scene.remove(objects);
+        }
     }
 }
