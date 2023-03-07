@@ -8,11 +8,24 @@ export class SeparationRule extends Rule {
     calculateVector(thisBoid: Boid, args: RuleArguments): THREE.Vector3 {
         const separation = new THREE.Vector3();
 
+        if (args.neighbours.length === 0) {
+            return new THREE.Vector3();
+        }
+
+        let weightSum = 0;
+
         for (const neighbour of args.neighbours) {
+            let weight = args.dropoff.fn(thisBoid.toOther(neighbour).length())
             const diff = new THREE.Vector3();
             diff.subVectors(thisBoid.position, neighbour.position);
-            separation.add(diff);
+            separation.addScaledVector(diff, weight);
+            weightSum += weight
         }
+
+        //console.log(weightSum)
+        separation.divideScalar(weightSum);
+
+        //console.log(separation)
 
         separation.normalize();
         separation.multiplyScalar(this.weight);

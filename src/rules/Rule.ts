@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { Boid } from "../objects/Boid";
 import { BoidSimulationParams } from "../BoidSimulation";
+import { Dropoff } from "../dropoffs/Dropoff";
 
 export interface RuleArguments {
     neighbours: Boid[];
     simParams: BoidSimulationParams;
+    dropoff: Dropoff
 }
 
 export interface RuleOptions {

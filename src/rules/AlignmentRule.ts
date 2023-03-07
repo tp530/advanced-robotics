@@ -5,7 +5,7 @@ import { Boid } from "../objects/Boid";
 export class AlignmentRule extends Rule {
     readonly name = "Alignment";
 
-    calculateVector(_thisBoid: Boid, args: RuleArguments): THREE.Vector3 {
+    calculateVector(thisBoid: Boid, args: RuleArguments): THREE.Vector3 {
         // no alignment force if there are no visible neighbours
         if (args.neighbours.length === 0) {
             return new THREE.Vector3();
@@ -13,10 +13,16 @@ export class AlignmentRule extends Rule {
 
         const alignment = new THREE.Vector3();
 
+        let weightSum = 0;
+
         for (const neighbour of args.neighbours) {
-            alignment.add(neighbour.velocity);
+            let weight = args.dropoff.fn(thisBoid.toOther(neighbour).length());
+            alignment.addScaledVector(neighbour.velocity, weight);
+            weightSum += weight;
         }
-        alignment.divideScalar(args.neighbours.length);
+        alignment.divideScalar(weightSum);
+
+        //console.log(alignment)
 
         alignment.normalize();
         alignment.multiplyScalar(this.weight);

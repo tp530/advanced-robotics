@@ -9,6 +9,10 @@ import { Bounds3D } from "./Bounds3D";
 import { WorldBoundaryRule } from "./rules/WorldBoundaryRule";
 import { CollisionAvoidanceRule } from "./rules/CollisionAvoidanceRule";
 import { Arena } from "./objects/Arena";
+import { NoDropoff } from "./dropoffs/NoDropoff";
+import { ExponentialDropoff } from "./dropoffs/ExponentialDropoff";
+import { InversePropDropoff } from "./dropoffs/InversePropDropoff";
+import { ProportionalDropoff } from "./dropoffs/ProportionalDropoff";
 
 export interface BoidSimulationParams {
     boidCount: number;
@@ -42,6 +46,13 @@ export class BoidSimulation extends Simulation {
         new WorldBoundaryRule(10),
         new CollisionAvoidanceRule(10),
     ];
+
+    dropoffs = [
+        new NoDropoff(1),
+        new ExponentialDropoff(Math.E),
+        new InversePropDropoff(1),
+        new ProportionalDropoff(this.simParams.visibilityThreshold, 1)
+    ]
 
     constructor(params?: BoidSimulationParams) {
         super();
@@ -96,6 +107,7 @@ export class BoidSimulation extends Simulation {
             boid.update(this.rules, {
                 neighbours: this.getBoidNeighbours(boid),
                 simParams: this.simParams,
+                dropoff: this.dropoffs[3],
             }),
         );
 

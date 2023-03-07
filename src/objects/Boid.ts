@@ -121,6 +121,8 @@ export class Boid {
 
         // move the boid by its velocity vector
         this.position.add(this.velocity);
+
+        //console.log(this.position)
     }
 
     /**
@@ -147,7 +149,7 @@ export class Boid {
         let angle = this.velocity.angleTo(otherPos.addScaledVector(thisPos, -1)) ?? 0
         let angularCond = (angle < angularThreshold) ?? false;
         //let angularCond = true
-        console.log(angularCond)
+        //console.log(angularCond)
         return distCond && angularCond;
     }
 
@@ -165,5 +167,9 @@ export class Boid {
         if (this.randomBias.length() > randomnessLimit) {
             this.randomBias.divideScalar(100);
         }
+    }
+
+    toOther(other: Boid): THREE.Vector3{
+        return this.position.clone().addScaledVector(other.position, -1)
     }
 }

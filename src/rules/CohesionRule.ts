@@ -12,10 +12,14 @@ export class CohesionRule extends Rule {
         }
         // calculate centre of visible boids
         const centre = new THREE.Vector3();
+        let weightSum = 0;
         for (const neighbour of args.neighbours) {
-            centre.add(neighbour.position);
+            let weight = args.dropoff.fn(thisBoid.toOther(neighbour).length());
+            centre.addScaledVector(neighbour.position, weight);
+            weightSum += weight
         }
-        centre.divideScalar(args.neighbours.length);
+        centre.divideScalar(weightSum);
+        //console.log(centre)
         // cohesion force is towards the calculated centre
         centre.sub(thisBoid.position);
 
