@@ -7,7 +7,7 @@ export interface CollisionAvoidanceRuleOptions extends RuleOptions {
 }
 
 export class CollisionAvoidanceRule extends Rule {
-    readonly name = "Collision Avoidance Rule";
+    readonly name = "Collision Avoidance";
 
     /**
      * How "aggressive" the collision avoidance should be.
