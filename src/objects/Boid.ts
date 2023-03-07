@@ -1,10 +1,8 @@
 import * as THREE from "three";
 import { Rule, RuleArguments } from "../rules/Rule";
 import { Bounds3D } from "../Bounds3D";
-import { BoidSimulationParams } from "../BoidSimulation";
 
 export interface BoidOptions {
-    simParams: BoidSimulationParams;
     // Initial boid position
     position: THREE.Vector3;
     // Initial boid velocity
@@ -21,8 +19,6 @@ export class Boid {
 
     visibilityRange = 50;
     protected maxSpeed = 0.5;
-
-    protected isAlive = true;
 
     /**
      * Each boid has a random bias that gets added to the calculated velocity
@@ -55,7 +51,6 @@ export class Boid {
         this.mesh.position.set(options.position.x, options.position.y, options.position.z);
         
         this.velocity = options.velocity;
-        this.maxSpeed = options.simParams.boidMaxSpeed;
     }
 
     /**
@@ -76,20 +71,12 @@ export class Boid {
         return this.mesh.position;
     }
 
-    get isBoidAlive(){
-        return this.isAlive;
-    }
-
-    public killBoid(){
-        this.isAlive = false;
-    }
-
     /**
      * Factory method to generate a boid with random position and velocity.
      * Options can be passed to control the min/max bounds for the random generation.
      * For any bounds that aren't passed, sensible defaults are used.
      */
-    static generateWithRandomPosAndVel(simParams: BoidSimulationParams, options?: {
+    static generateWithRandomPosAndVel(options?: {
         positionBounds?: Bounds3D;
         velocityBounds?: Bounds3D;
     }): Boid {
@@ -119,7 +106,6 @@ export class Boid {
                 Math.random() * (maxYVel - minYVel) + minYVel,
                 Math.random() * (maxZVel - minZVel) + minZVel,
             ),
-            simParams,
         });
     }
 
