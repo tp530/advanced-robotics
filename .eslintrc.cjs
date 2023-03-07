@@ -8,7 +8,7 @@ module.exports = {
   ],
   parser: "@typescript-eslint/parser",
   rules: {
-    indent: ["error", 4],
+    indent: ["error", 4, {"SwitchCase": 1}],
     quotes: ["error", "double"],
     semi: ["error", "always"],
   },
