@@ -2,10 +2,8 @@ import * as THREE from "three";
 import { Rule, RuleArguments } from "../rules/Rule";
 import { Bounds3D } from "../Bounds3D";
 import { Material } from "three";
-import { BoidSimulationParams } from "../BoidSimulation";
 
 export interface BoidOptions {
-    simParams: BoidSimulationParams;
     // Initial boid position
     position: THREE.Vector3;
     // Initial boid velocity
@@ -13,7 +11,6 @@ export interface BoidOptions {
     // Boid acceleration (change in velocity per timestep)
     acceleration: number;
     photorealisticRendering: boolean;
-    colour?: {h: number, s:number, l: number};
 }
 
 export class Boid {
@@ -23,12 +20,6 @@ export class Boid {
     targetVelocity: THREE.Vector3;
 
     acceleration: number;
-    predatorRange = 70;
-
-    visibilityRange = 50;
-    protected maxSpeed = 0.5;
-
-    protected isAlive = true;
 
     /**
      * Each boid has a random bias that gets added to the calculated velocity
@@ -48,13 +39,10 @@ export class Boid {
      * Base colour of the boid, before randomly adjusting lightness of each boid.
      * H, S, and L are in the range [0, 1].
      */
-    protected baseColour = { h: 183/360, s: 1, l: 0.3 };
+    private baseColour = { h: 0.602, s: 0.32, l: 0.3 };
 
     constructor(options: BoidOptions) {
         // model boids as a cone so we can see their direction
-        if(options.colour){
-            this.baseColour = options.colour;
-        }
         const geometry = new THREE.ConeGeometry(1, 4);
 
         let material: Material;
@@ -73,7 +61,6 @@ export class Boid {
         this.mesh.position.set(options.position.x, options.position.y, options.position.z);
 
         this.actualVelocity = options.velocity;
-        this.maxSpeed = options.simParams.boidMaxSpeed;
         this.targetVelocity = options.velocity.clone();
 
         this.acceleration = options.acceleration;
@@ -82,7 +69,7 @@ export class Boid {
     /**
      * Randomly generate a version of `this.baseColour`, with lightness adjusted.
      */
-    protected generateIndividualColour(photorealisticRendering: boolean) {
+    private generateIndividualColour(photorealisticRendering: boolean) {
         let lightnessAdjust: number;
         if (photorealisticRendering) {
             lightnessAdjust = Math.random() * 0.8;
@@ -102,20 +89,12 @@ export class Boid {
         return this.mesh.position;
     }
 
-    get isBoidAlive(){
-        return this.isAlive;
-    }
-
-    public killBoid(){
-        this.isAlive = false;
-    }
-
     /**
      * Factory method to generate a boid with random position and velocity.
      * Options can be passed to control the min/max bounds for the random generation.
      * For any bounds that aren't passed, sensible defaults are used.
      */
-    static generateWithRandomPosAndVel(simParams: BoidSimulationParams, options?: {
+    static generateWithRandomPosAndVel(options?: {
         positionBounds?: Bounds3D;
         velocityBounds?: Bounds3D;
         acceleration?: number;
@@ -151,7 +130,6 @@ export class Boid {
             ),
             acceleration,
             photorealisticRendering: options !== undefined && options.photorealisticRendering,
-            simParams,
         });
     }
 

@@ -1,14 +1,9 @@
 import * as THREE from "three";
 import { Boid } from "../objects/Boid";
 import { BoidSimulationParams } from "../BoidSimulation";
-import { Doib } from "../objects/Doib";
-import { Predator } from "../objects/Predator";
 
 export interface RuleArguments {
     neighbours: Boid[];
-    boids: Boid[];
-    doibs: Doib[];
-    predators: Predator[];
     simParams: BoidSimulationParams;
 }
 
