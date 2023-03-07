@@ -338,4 +338,3 @@ export class Water extends Mesh {
 	}
 
 }
-
