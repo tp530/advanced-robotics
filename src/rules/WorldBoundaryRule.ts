@@ -15,6 +15,8 @@ export class WorldBoundaryRule extends Rule {
 
     readonly alwaysApplyToLeaderBoids = true;
 
+    private static readonly BOUNDARY_PADDING = 10;
+
     /**
      * How "sharp" the world boundary should be.
      * Higher values will produce snappier changes in direction.
@@ -88,6 +90,12 @@ export class WorldBoundaryRule extends Rule {
         avoidanceVector: THREE.Vector3,
         isLowBoundary: boolean,
     ): THREE.Vector3 {
+        if (isLowBoundary) {
+            boundary += WorldBoundaryRule.BOUNDARY_PADDING;
+        } else {
+            boundary -= WorldBoundaryRule.BOUNDARY_PADDING;
+        }
+
         const distToWall = isLowBoundary ? position - boundary : boundary - position;
 
         const avoidanceMagnitude = Math.pow(this.SHARPNESS, -distToWall);
