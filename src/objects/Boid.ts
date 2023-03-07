@@ -156,7 +156,10 @@ export class Boid {
 
         this.capSpeed(ruleArguments.simParams.maxSpeed);
 
-        this.addRandomnessToVelocity(ruleArguments);
+        this.addRandomnessToVelocity(
+            ruleArguments.simParams.randomnessPerTimestep,
+            ruleArguments.simParams.randomnessLimit,
+        );
 
         this.move();
     }
@@ -167,11 +170,8 @@ export class Boid {
         }
     }
 
-    addRandomnessToVelocity(ruleArguments: RuleArguments) {
-        this.updateRandomBias(
-            ruleArguments.simParams.randomnessPerTimestep,
-            ruleArguments.simParams.randomnessLimit,
-        );
+    addRandomnessToVelocity(randomnessPerTimestep: number, randomnessLimit: number) {
+        this.updateRandomBias(randomnessPerTimestep, randomnessLimit);
         this.velocity.add(this.randomBias);
     }
 

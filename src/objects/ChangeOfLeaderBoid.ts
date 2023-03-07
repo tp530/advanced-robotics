@@ -43,11 +43,8 @@ export class ChangeOfLeaderBoid extends Boid {
 
     updateAndMove(rules: Rule[], ruleArguments: RuleArguments) {
         // stop being a leader after some time
-        if (
-            this.status === LeaderBoidStatus.Leader &&
-            this.leaderTimestep > this.maxLeaderTimestep
-        ) {
-            this.status = LeaderBoidStatus.NotLeader;
+        if (this.status === LeaderBoidStatus.Leader) {
+            this.checkIfStopBeingLeader();
         }
         switch (this.status) {
             case LeaderBoidStatus.Leader: {
@@ -78,13 +75,29 @@ export class ChangeOfLeaderBoid extends Boid {
         }
 
         this.capSpeed(ruleArguments.simParams.maxSpeed);
-        this.addRandomnessToVelocity(ruleArguments);
+
+        // add more randomness to leader boids
+        const randomnessMultiplier = 4;
+        this.addRandomnessToVelocity(
+            ruleArguments.simParams.randomnessPerTimestep * randomnessMultiplier,
+            ruleArguments.simParams.randomnessLimit * randomnessMultiplier,
+        );
 
         super.move();
     }
 
     private updateNotLeader(rules: Rule[], ruleArguments: RuleArguments) {
         super.updateAndMove(rules, ruleArguments);
+    }
+
+    private checkIfStopBeingLeader() {
+        // add some randomness around maxLeaderTimestep
+        if (
+            this.leaderTimestep >
+            this.maxLeaderTimestep - (Math.random() * this.maxLeaderTimestep) / 3
+        ) {
+            this.status = LeaderBoidStatus.NotLeader;
+        }
     }
 
     private allowChanceToBecomeLeader(ruleArguments: RuleArguments) {
