@@ -21,6 +21,7 @@ export interface BoidSimulationParams {
     boidCount: number;
     visibilityThreshold: number;
     maxSpeed: number;
+    acceleration: number;
     worldDimens: Bounds3D;
     photorealisticRendering: boolean;
     randomnessPerTimestep: number;
@@ -37,6 +38,7 @@ export class BoidSimulation extends Simulation {
         boidCount: 100,
         visibilityThreshold: 25,
         maxSpeed: 0.5,
+        acceleration: 0.01,
         worldDimens: Bounds3D.centredXZ(200, 200, 100),
         photorealisticRendering: false,
         randomnessPerTimestep: 0.01,
@@ -213,7 +215,9 @@ export class BoidSimulation extends Simulation {
         let difference = this.simParams.boidCount - this.boids.length;
         while (difference > 0) {
             // generate new boids
-            const boid = ChangeOfLeaderBoid.generateWithRandomPosAndVel(this.newBoidId());
+            const boid = ChangeOfLeaderBoid.generateWithRandomPosAndVel(this.newBoidId(), {
+                acceleration: this.simParams.acceleration,
+            });
             this.addToScene(boid.mesh);
             this.boids.push(boid);
             difference--;

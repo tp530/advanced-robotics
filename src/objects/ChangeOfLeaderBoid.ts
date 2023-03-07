@@ -35,7 +35,7 @@ export class ChangeOfLeaderBoid extends Boid {
 
     constructor(id: BoidId, options: ChangeOfLeaderBoidOptions) {
         super(id, options);
-        this.maxLeaderTimestep = options?.maxLeaderTimestep ?? 150;
+        this.maxLeaderTimestep = options?.maxLeaderTimestep ?? 250;
         this.eccentricityThreshold = options?.eccentricityThreshold ?? 0.5;
         this.neighbourCountThreshold = options?.neighbourCountThreshold ?? 8;
         this.becomeLeaderProbability = options?.becomeLeaderProbability ?? 0.001;
@@ -66,11 +66,11 @@ export class ChangeOfLeaderBoid extends Boid {
 
     private updateLeader(rules: Rule[], ruleArguments: RuleArguments) {
         const antiCohesionRule = new CohesionRule(-10);
-        this.velocity.add(antiCohesionRule.calculateVector(this, ruleArguments));
+        this.targetVelocity.add(antiCohesionRule.calculateVector(this, ruleArguments));
 
         for (const rule of rules) {
             if (rule.alwaysApplyToLeaderBoids) {
-                this.velocity.add(rule.calculateVector(this, ruleArguments));
+                this.targetVelocity.add(rule.calculateVector(this, ruleArguments));
             }
         }
 
@@ -155,6 +155,7 @@ export class ChangeOfLeaderBoid extends Boid {
         options?: {
             positionBounds?: Bounds3D;
             velocityBounds?: Bounds3D;
+            acceleration?: number;
         },
     ): Boid {
         // default position and velocity bounds
@@ -172,6 +173,8 @@ export class ChangeOfLeaderBoid extends Boid {
         const minZVel = options?.velocityBounds?.zMin ?? -0.2;
         const maxZVel = options?.velocityBounds?.zMax ?? 0.2;
 
+        const acceleration = options?.acceleration ?? 0.01;
+
         return new ChangeOfLeaderBoid(id, {
             position: new THREE.Vector3(
                 Math.random() * (maxXPos - minXPos) + minXPos,
@@ -183,6 +186,7 @@ export class ChangeOfLeaderBoid extends Boid {
                 Math.random() * (maxYVel - minYVel) + minYVel,
                 Math.random() * (maxZVel - minZVel) + minZVel,
             ),
+            acceleration,
         });
     }
 }
