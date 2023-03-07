@@ -2,6 +2,7 @@ import { Boid, BoidId } from "./Boid";
 import { Rule, RuleArguments } from "../rules/Rule";
 import * as THREE from "three";
 import { Bounds3D } from "../Bounds3D";
+import { CohesionRule } from "../rules/CohesionRule";
 
 export enum LeaderBoidStatus {
     Leader,
@@ -11,7 +12,7 @@ export enum LeaderBoidStatus {
 export class ChangeOfLeaderBoid extends Boid {
     status = LeaderBoidStatus.NotLeader;
     private leaderTimestep = 0;
-    private static readonly MAX_LEADER_TIMESTEP = 200;
+    private static readonly MAX_LEADER_TIMESTEP = 150;
     private static readonly ECCENTRICITY_THRESHOLD = 0.5;
     private static readonly NEIGHBOUR_COUNT_THRESHOLD = 8;
 
@@ -28,7 +29,7 @@ export class ChangeOfLeaderBoid extends Boid {
         switch (this.status) {
             case LeaderBoidStatus.Leader: {
                 this.leaderTimestep++;
-                this.updateLeader();
+                this.updateLeader(rules, ruleArguments);
                 (this.mesh.material as THREE.MeshBasicMaterial).color = new THREE.Color().setHSL(
                     0.2,
                     1,
@@ -50,7 +51,19 @@ export class ChangeOfLeaderBoid extends Boid {
         }
     }
 
-    private updateLeader() {
+    private updateLeader(rules: Rule[], ruleArguments: RuleArguments) {
+        const antiCohesionRule = new CohesionRule(-10);
+        this.velocity.add(antiCohesionRule.calculateVector(this, ruleArguments));
+
+        for (const rule of rules) {
+            if (rule.alwaysApplyToLeaderBoids) {
+                this.velocity.add(rule.calculateVector(this, ruleArguments));
+            }
+        }
+
+        this.capSpeed(ruleArguments.simParams.maxSpeed);
+        this.addRandomnessToVelocity(ruleArguments);
+
         super.move();
     }
 

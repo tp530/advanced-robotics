@@ -13,6 +13,8 @@ export interface WorldBoundaryRuleOptions extends RuleOptions {
 export class WorldBoundaryRule extends Rule {
     readonly name = "Avoid World Boundary";
 
+    readonly alwaysApplyToLeaderBoids = true;
+
     /**
      * How "sharp" the world boundary should be.
      * Higher values will produce snappier changes in direction.

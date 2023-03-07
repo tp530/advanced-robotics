@@ -40,9 +40,11 @@ export class FollowLeaderRule extends Rule {
             thisBoid.followingBoid = null;
         }
 
+        // check is necessary, because we might set it to null in the body of
+        // previous if statement
         if (thisBoid.followingBoid === null) {
             // probability of following a leader
-            if (Math.random() > 0.999) {
+            if (Math.random() > 0.995) {
                 const index = Math.floor(Math.random() * visibleLeaders.length);
                 const newFollowingLeader = visibleLeaders[index];
                 thisBoid.followingBoid = newFollowingLeader.id;

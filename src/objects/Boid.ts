@@ -134,39 +134,38 @@ export class Boid {
     }
 
     updateAndMove(rules: Rule[], ruleArguments: RuleArguments) {
-        // point the void to face in the direction it's moving
-        this.pointInDirection(this.velocity);
-
-        const nonCappedRuleVector = new THREE.Vector3();
-
         for (const rule of rules) {
             const ruleVector = rule.calculateVector(this, ruleArguments);
-            if (rule.applyAfterVelocityCap) {
-                nonCappedRuleVector.add(ruleVector);
-            } else {
-                this.velocity.add(ruleVector);
-            }
+            this.velocity.add(ruleVector);
         }
 
-        if (this.velocity.length() > ruleArguments.simParams.maxSpeed) {
-            this.velocity.setLength(ruleArguments.simParams.maxSpeed);
+        this.capSpeed(ruleArguments.simParams.maxSpeed);
+
+        this.addRandomnessToVelocity(ruleArguments);
+
+        this.move();
+    }
+
+    capSpeed(maxSpeed: number) {
+        if (this.velocity.length() > maxSpeed) {
+            this.velocity.setLength(maxSpeed);
         }
+    }
 
-        this.velocity.add(nonCappedRuleVector);
-
+    addRandomnessToVelocity(ruleArguments: RuleArguments) {
         this.updateRandomBias(
             ruleArguments.simParams.randomnessPerTimestep,
             ruleArguments.simParams.randomnessLimit,
         );
         this.velocity.add(this.randomBias);
-
-        this.move();
     }
 
     /*
      * move the boid by its velocity vector
      */
     move() {
+        // point the void to face in the direction it's moving
+        this.pointInDirection(this.velocity);
         this.position.add(this.velocity);
     }
 
