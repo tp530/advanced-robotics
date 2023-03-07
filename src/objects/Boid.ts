@@ -148,7 +148,12 @@ export class Boid {
         });
     }
 
-    updateAndMove(rules: Rule[], ruleArguments: RuleArguments) {
+    update(rules: Rule[], ruleArguments: RuleArguments) {
+        this.updateVelocity(rules, ruleArguments);
+        this.move();
+    }
+
+    updateVelocity(rules: Rule[], ruleArguments: RuleArguments) {
         for (const rule of rules) {
             const ruleVector = rule.calculateVector(this, ruleArguments);
             this.velocity.add(ruleVector);
@@ -160,8 +165,6 @@ export class Boid {
             ruleArguments.simParams.randomnessPerTimestep,
             ruleArguments.simParams.randomnessLimit,
         );
-
-        this.move();
     }
 
     capSpeed(maxSpeed: number) {

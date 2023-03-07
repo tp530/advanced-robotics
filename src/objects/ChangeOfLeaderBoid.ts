@@ -41,7 +41,7 @@ export class ChangeOfLeaderBoid extends Boid {
         this.becomeLeaderProbability = options?.becomeLeaderProbability ?? 0.001;
     }
 
-    updateAndMove(rules: Rule[], ruleArguments: RuleArguments) {
+    update(rules: Rule[], ruleArguments: RuleArguments) {
         // stop being a leader after some time
         if (this.status === LeaderBoidStatus.Leader) {
             this.checkIfStopBeingLeader();
@@ -87,7 +87,7 @@ export class ChangeOfLeaderBoid extends Boid {
     }
 
     private updateNotLeader(rules: Rule[], ruleArguments: RuleArguments) {
-        super.updateAndMove(rules, ruleArguments);
+        super.update(rules, ruleArguments);
     }
 
     private checkIfStopBeingLeader() {
