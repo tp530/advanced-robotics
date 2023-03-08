@@ -20,9 +20,11 @@ import { smallWorld } from "./worlds/SmallWorld";
 import { Bounds3D } from "./Bounds3D";
 import { WorldTools } from "./objects/world/WorldTools";
 import { FollowLeaderRule } from "./rules/FollowLeaderRule";
+import { BoidGenerator, BoidType } from "./BoidGenerator";
 
 export interface BoidSimulationParams {
     boidCount: number;
+    boidType: BoidType;
     visibilityThreshold: number;
     maxSpeed: number;
     acceleration: number;
@@ -35,12 +37,9 @@ export interface BoidSimulationParams {
 }
 
 export class BoidSimulation extends Simulation {
-
     controlsGui: GUI;
 
-    worlds: World[] = [
-        defaultWorld, smallWorld
-    ];
+    worlds: World[] = [defaultWorld, smallWorld];
 
     worldNames: string[] = WorldTools.getNames(this.worlds);
 
@@ -51,11 +50,15 @@ export class BoidSimulation extends Simulation {
 
     simParams: BoidSimulationParams = {
         boidCount: 100,
+        boidType: BoidType.ChangeOfLeader,
         visibilityThreshold: 25,
         maxSpeed: 0.5,
         acceleration: 0.01,
         worldName: defaultWorld.name,
-        worldDimens: WorldTools.getWorldByName(this.worlds, this.currentWorldName).get3DBoundaries(),
+        worldDimens: WorldTools.getWorldByName(
+            this.worlds,
+            this.currentWorldName,
+        ).get3DBoundaries(),
         photorealisticRendering: false,
         randomnessPerTimestep: 0.01,
         randomnessLimit: 0.1,
@@ -242,7 +245,6 @@ export class BoidSimulation extends Simulation {
     }
 
     update() {
-
         // Reload the world if needed
         if (this.currentWorldName !== this.simParams.worldName) {
             this.reloadWorld();
@@ -254,8 +256,8 @@ export class BoidSimulation extends Simulation {
         this.boids.map((boid) =>
             boid.update(this.rules, {
                 neighbours: this.getBoidNeighbours(boid),
-                simParams: this.simParams
-            })
+                simParams: this.simParams,
+            }),
         );
 
         if (
@@ -270,7 +272,6 @@ export class BoidSimulation extends Simulation {
     }
 
     reloadWorld() {
-
         const world = WorldTools.getWorldByName(this.worlds, this.simParams.worldName);
         this.simParams.worldDimens = world.get3DBoundaries();
 
@@ -297,7 +298,6 @@ export class BoidSimulation extends Simulation {
         }
 
         this.currentWorldName = this.simParams.worldName;
-
     }
 
     updateBoidCount() {
@@ -309,11 +309,12 @@ export class BoidSimulation extends Simulation {
         let difference = this.simParams.boidCount - this.boids.length;
         while (difference > 0) {
             // generate new boids
-            const boid = ChangeOfLeaderBoid.generateWithRandomPosAndVel(this.newBoidId(),
-                {
-                    positionBounds: this.simParams.worldDimens,
-                    acceleration: this.simParams.acceleration,
-                });
+            const boid = BoidGenerator.generateBoidWithRandomPosAndVec(this.newBoidId(), {
+                boidType: this.simParams.boidType,
+                positionBounds: this.simParams.worldDimens,
+                acceleration: this.simParams.acceleration,
+                photorealisticRendering: this.simParams.photorealisticRendering,
+            });
             this.addToScene(boid.mesh);
             this.boids.push(boid);
             difference--;
@@ -348,5 +349,4 @@ export class BoidSimulation extends Simulation {
         }
         return neighbours;
     }
-
 }
