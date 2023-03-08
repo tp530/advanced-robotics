@@ -29,43 +29,44 @@ export class WorldBoundaryRule extends Rule {
     }
 
     calculateVector(thisBoid: Boid, args: RuleArguments): THREE.Vector3 {
+
         const avoidNegXBound = this.avoidBoundaryVector(
             thisBoid.position.x,
             args.simParams.worldDimens.xMin,
             new THREE.Vector3(1, 0, 0),
-            true,
+            true
         );
         const avoidPosXBound = this.avoidBoundaryVector(
             thisBoid.position.x,
             args.simParams.worldDimens.xMax,
             new THREE.Vector3(-1, 0, 0),
-            false,
+            false
         );
 
         const avoidNegYBound = this.avoidBoundaryVector(
             thisBoid.position.y,
             args.simParams.worldDimens.yMin,
             new THREE.Vector3(0, 1, 0),
-            true,
+            true
         );
         const avoidPosYBound = this.avoidBoundaryVector(
             thisBoid.position.y,
             args.simParams.worldDimens.yMax,
             new THREE.Vector3(0, -1, 0),
-            false,
+            false
         );
 
         const avoidNegZBound = this.avoidBoundaryVector(
             thisBoid.position.z,
             args.simParams.worldDimens.zMin,
             new THREE.Vector3(0, 0, 1),
-            true,
+            true
         );
         const avoidPosZBound = this.avoidBoundaryVector(
             thisBoid.position.z,
             args.simParams.worldDimens.zMax,
             new THREE.Vector3(0, 0, -1),
-            false,
+            false
         );
 
         const avoidBoundariesVector = new THREE.Vector3();
