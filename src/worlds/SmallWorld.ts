@@ -1,4 +1,4 @@
-import { World } from "../objects/World";
+import { World } from "../objects/world/World";
 
 export const smallWorld = new World({
     name: "Small World",

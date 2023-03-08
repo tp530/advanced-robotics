@@ -13,10 +13,11 @@ import { Sky } from "./objects/Sky";
 import * as THREE from "three";
 import { SunParams } from "./objects/Sun";
 import { ShaderMaterial } from "three";
-import { World, WorldTools } from "./objects/World";
+import { World } from "./objects/world/World";
 import { defaultWorld } from "./worlds/Default";
 import { smallWorld } from "./worlds/SmallWorld";
 import { Bounds3D } from "./Bounds3D";
+import { WorldTools } from "./objects/world/WorldTools";
 
 export interface BoidSimulationParams {
     boidCount: number;
@@ -253,8 +254,6 @@ export class BoidSimulation extends Simulation {
             this.floor = new Floor(this.simParams);
             this.addToScene(this.floor.mesh);
         }
-
-        console.log("New: " + this.simParams.worldName);
 
         this.currentWorldName = this.simParams.worldName;
 
