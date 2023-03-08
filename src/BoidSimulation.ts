@@ -1,26 +1,28 @@
-import { Simulation } from "./Simulation";
-import { Boid } from "./objects/Boid";
-import { GUI } from "dat.gui";
-import { Floor } from "./objects/Floor";
-import { SeparationRule } from "./rules/SeparationRule";
-import { CohesionRule } from "./rules/CohesionRule";
-import { AlignmentRule } from "./rules/AlignmentRule";
-import { WorldBoundaryRule } from "./rules/WorldBoundaryRule";
-import { CollisionAvoidanceRule } from "./rules/CollisionAvoidanceRule";
-import { Arena } from "./objects/Arena";
-import { Water } from "./objects/Water";
-import { Sky } from "./objects/Sky";
+import {Simulation} from "./Simulation";
+import {Boid} from "./objects/Boid";
+import {GUI} from "dat.gui";
+import {Floor} from "./objects/Floor";
+import {SeparationRule} from "./rules/SeparationRule";
+import {CohesionRule} from "./rules/CohesionRule";
+import {AlignmentRule} from "./rules/AlignmentRule";
+import {WorldBoundaryRule} from "./rules/WorldBoundaryRule";
+import {CollisionAvoidanceRule} from "./rules/CollisionAvoidanceRule";
+import {Arena} from "./objects/Arena";
+import {Water} from "./objects/Water";
+import {Sky} from "./objects/Sky";
 import * as THREE from "three";
-import { SunParams } from "./objects/Sun";
-import { ShaderMaterial } from "three";
-import { World } from "./objects/world/World";
-import { defaultWorld } from "./worlds/Default";
-import { smallWorld } from "./worlds/SmallWorld";
-import { Bounds3D } from "./Bounds3D";
-import { WorldTools } from "./objects/world/WorldTools";
+import {ShaderMaterial} from "three";
+import {SunParams} from "./objects/Sun";
+import {World} from "./objects/world/World";
+import {defaultWorld} from "./worlds/Default";
+import {smallWorld} from "./worlds/SmallWorld";
+import {Bounds3D} from "./Bounds3D";
+import {WorldTools} from "./objects/world/WorldTools";
+import {BoidGenerator, BoidType} from "./BoidGenerator";
 
 export interface BoidSimulationParams {
     boidCount: number;
+    boidType: BoidType;
     visibilityThreshold: number;
     maxSpeed: number;
     acceleration: number;
@@ -47,6 +49,7 @@ export class BoidSimulation extends Simulation {
 
     simParams: BoidSimulationParams = {
         boidCount: 50,
+        boidType: BoidType.Normal,
         visibilityThreshold: 50,
         maxSpeed: 0.5,
         acceleration: 0.01,
@@ -268,7 +271,8 @@ export class BoidSimulation extends Simulation {
         let difference = this.simParams.boidCount - this.boids.length;
         while (difference > 0) {
             // generate new boids
-            const boid = Boid.generateWithRandomPosAndVel({
+            const boid = BoidGenerator.generateBoidWithRandomPosAndVec({
+                boidType: this.simParams.boidType,
                 positionBounds: this.simParams.worldDimens,
                 acceleration: this.simParams.acceleration,
                 photorealisticRendering: this.simParams.photorealisticRendering,
