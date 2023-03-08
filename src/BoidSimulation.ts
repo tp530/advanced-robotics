@@ -9,7 +9,7 @@ import { Bounds3D } from "./Bounds3D";
 import { WorldBoundaryRule } from "./rules/WorldBoundaryRule";
 import { CollisionAvoidanceRule } from "./rules/CollisionAvoidanceRule";
 import { Arena } from "./objects/Arena";
-import { ChangeOfLeaderBoid } from "./objects/ChangeOfLeaderBoid";
+import { ChangeOfLeaderBoid, ChangeOfLeaderBoidOptions } from "./objects/ChangeOfLeaderBoid";
 import { Water } from "./objects/Water";
 import { Sky } from "./objects/Sky";
 import * as THREE from "three";
@@ -26,6 +26,7 @@ export interface BoidSimulationParams {
     photorealisticRendering: boolean;
     randomnessPerTimestep: number;
     randomnessLimit: number;
+    changeOfLeaderBoidOptions: ChangeOfLeaderBoidOptions;
 }
 
 export class BoidSimulation extends Simulation {
@@ -43,6 +44,15 @@ export class BoidSimulation extends Simulation {
         photorealisticRendering: false,
         randomnessPerTimestep: 0.01,
         randomnessLimit: 0.1,
+        changeOfLeaderBoidOptions: {
+            maxLeaderTimestep: 250,
+            eccentricityThreshold: 0.5,
+            neighbourCountThreshold: 8,
+            becomeLeaderProbability: 0.001,
+            colourBoids: true,
+            peakSpeedMultiplier: 1.25,
+            peakSpeedTimestepFraction: 0.25,
+        },
     };
 
     rules = [
@@ -92,6 +102,34 @@ export class BoidSimulation extends Simulation {
         for (const rule of this.rules) {
             ruleWeightsGui.add(rule, "weight", rule.minWeight, rule.maxWeight, 0.1).name(rule.name);
         }
+
+        // Controls for change of leader boids
+        const changeOfLeaderGui = this.controlsGui.addFolder("Change of Leader");
+        changeOfLeaderGui.open();
+        changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "maxLeaderTimestep", 100, 400, 20)
+            .name("Timesteps");
+        changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "eccentricityThreshold", 0, 1, 0.05)
+            .name("Eccentricity threshold");
+        changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "neighbourCountThreshold", 0, 15, 1)
+            .name("Min neighbours");
+        changeOfLeaderGui
+            .add(
+                this.simParams.changeOfLeaderBoidOptions,
+                "becomeLeaderProbability",
+                0,
+                0.005,
+                0.0001,
+            )
+            .name("Leader probability");
+        changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "peakSpeedMultiplier", 1, 2, 0.05)
+            .name("Escape speed");
+        changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "peakSpeedTimestepFraction", 0, 1, 0.05)
+            .name("Speed profile");
 
         // add a floor to the simulation
         if (!this.simParams.photorealisticRendering) {

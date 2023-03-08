@@ -1,4 +1,4 @@
-import { Boid, BoidId, BoidOptions } from "./Boid";
+import { Boid, BoidId } from "./Boid";
 import { Rule, RuleArguments } from "../rules/Rule";
 import * as THREE from "three";
 import { Bounds3D } from "../Bounds3D";
@@ -9,53 +9,43 @@ export enum LeaderBoidStatus {
     NotLeader,
 }
 
-export interface ChangeOfLeaderBoidOptions extends BoidOptions {
+export interface ChangeOfLeaderBoidOptions {
     // The max number of timesteps a boid can be a leader for
-    maxLeaderTimestep?: number;
+    maxLeaderTimestep: number;
     // The level of 'eccentricity' needed for a boid to be allowed to become a
-    // leader. (Ie. how much on the outside of the flock it needs to be)
-    eccentricityThreshold?: number;
+    // leader. (I.e. how much on the outside of the flock it needs to be)
+    eccentricityThreshold: number;
     // The number of neighbours a boid needs to be able to become a leader.
     // This is to prevent shoot-offs from tiny groups of boids.
-    neighbourCountThreshold?: number;
+    neighbourCountThreshold: number;
     // The probability that a boid will become a leader in a given timestep, given
     // it meets all the other constraints.
-    becomeLeaderProbability?: number;
+    becomeLeaderProbability: number;
     // Whether to set the boids' colour based on their state
-    colourBoids?: boolean;
+    colourBoids: boolean;
+    // The maximum speed an escaping boid is allowed to reach (as a multiplier of the normal max speed)
+    peakSpeedMultiplier: number;
+    // The fraction of the time through escaping that the max speed is reached.
+    peakSpeedTimestepFraction: number;
 }
 
 export class ChangeOfLeaderBoid extends Boid {
     status = LeaderBoidStatus.NotLeader;
     private leaderTimestep = 0;
-    private maxLeaderTimestep: number;
-    private eccentricityThreshold: number;
-    private neighbourCountThreshold: number;
-    private becomeLeaderProbability: number;
-
-    private readonly COLOUR_BOIDS: boolean;
 
     followingBoid: BoidId | null = null;
 
-    constructor(id: BoidId, options: ChangeOfLeaderBoidOptions) {
-        super(id, options);
-        this.maxLeaderTimestep = options?.maxLeaderTimestep ?? 250;
-        this.eccentricityThreshold = options?.eccentricityThreshold ?? 0.5;
-        this.neighbourCountThreshold = options?.neighbourCountThreshold ?? 8;
-        this.becomeLeaderProbability = options?.becomeLeaderProbability ?? 0.001;
-        this.COLOUR_BOIDS = options?.colourBoids ?? true;
-    }
-
     update(rules: Rule[], ruleArguments: RuleArguments) {
+        const changeOfLeaderOptions = ruleArguments.simParams.changeOfLeaderBoidOptions;
         // stop being a leader after some time
         if (this.status === LeaderBoidStatus.Leader) {
-            this.checkIfStopBeingLeader();
+            this.checkIfStopBeingLeader(changeOfLeaderOptions);
         }
         switch (this.status) {
             case LeaderBoidStatus.Leader: {
                 this.leaderTimestep++;
                 this.updateLeader(rules, ruleArguments);
-                if (this.COLOUR_BOIDS) {
+                if (changeOfLeaderOptions.colourBoids) {
                     this.setColour(new THREE.Color().setHSL(0.2, 1, 0.5));
                 }
                 break;
@@ -64,7 +54,7 @@ export class ChangeOfLeaderBoid extends Boid {
                 this.updateNotLeader(rules, ruleArguments);
                 this.allowChanceToBecomeLeader(ruleArguments);
                 // set colour of boid if we're following a leader
-                if (this.followingBoid !== null && this.COLOUR_BOIDS) {
+                if (this.followingBoid !== null && changeOfLeaderOptions.colourBoids) {
                     this.setColour(new THREE.Color().setHSL(0, 0.8, 0.5));
                 }
                 break;
@@ -82,7 +72,10 @@ export class ChangeOfLeaderBoid extends Boid {
             }
         }
 
-        this.capSpeed(ruleArguments.simParams.maxSpeed * this.getLeaderMaxSpeedMultiplier());
+        this.capSpeed(
+            ruleArguments.simParams.maxSpeed *
+                this.getLeaderMaxSpeedMultiplier(ruleArguments.simParams.changeOfLeaderBoidOptions),
+        );
 
         // add more randomness to leader boids
         const randomnessMultiplier = 4;
@@ -98,36 +91,38 @@ export class ChangeOfLeaderBoid extends Boid {
         super.update(rules, ruleArguments);
     }
 
-    private checkIfStopBeingLeader() {
+    private checkIfStopBeingLeader(changeOfLeaderOptions: ChangeOfLeaderBoidOptions) {
         // add some randomness around maxLeaderTimestep
         if (
             this.leaderTimestep >
-            this.maxLeaderTimestep - (Math.random() * this.maxLeaderTimestep) / 3
+            changeOfLeaderOptions.maxLeaderTimestep -
+                (Math.random() * changeOfLeaderOptions.maxLeaderTimestep) / 3
         ) {
             this.status = LeaderBoidStatus.NotLeader;
         }
     }
 
     private allowChanceToBecomeLeader(ruleArguments: RuleArguments) {
+        const changeOfLeaderOptions = ruleArguments.simParams.changeOfLeaderBoidOptions;
         const x = this.calculateEccentricity(
             ruleArguments.neighbours,
             ruleArguments.simParams.visibilityThreshold,
         );
         let hasChanceOfEscaping = false;
         if (
-            x > this.eccentricityThreshold &&
-            ruleArguments.neighbours.length >= this.neighbourCountThreshold
+            x > changeOfLeaderOptions.eccentricityThreshold &&
+            ruleArguments.neighbours.length >= changeOfLeaderOptions.neighbourCountThreshold
         ) {
             hasChanceOfEscaping = true;
         }
         // colour boids on the edge of the flock that have a chance of escaping,
         // and all other boids default colour
-        if (this.COLOUR_BOIDS) {
+        if (changeOfLeaderOptions.colourBoids) {
             this.setColour(new THREE.Color().setHSL(0.7, 1, hasChanceOfEscaping ? 0.7 : 0.1));
         }
 
         if (hasChanceOfEscaping) {
-            const isEscaping = Math.random() > 1 - this.becomeLeaderProbability;
+            const isEscaping = Math.random() > 1 - changeOfLeaderOptions.becomeLeaderProbability;
             if (isEscaping) {
                 this.status = LeaderBoidStatus.Leader;
             }
@@ -157,12 +152,25 @@ export class ChangeOfLeaderBoid extends Boid {
         return centre;
     }
 
-    private getLeaderMaxSpeedMultiplier(): number {
+    private getLeaderMaxSpeedMultiplier(changeOfLeaderOptions: ChangeOfLeaderBoidOptions): number {
         // allow a short burst of speed at the start of escaping
-        if (this.leaderTimestep < this.maxLeaderTimestep / 4) {
-            return 1 + (2 * this.leaderTimestep) / this.maxLeaderTimestep;
+        const peakTimestep = Math.floor(
+            changeOfLeaderOptions.maxLeaderTimestep *
+                changeOfLeaderOptions.peakSpeedTimestepFraction,
+        );
+        if (this.leaderTimestep < peakTimestep) {
+            return (
+                ((changeOfLeaderOptions.peakSpeedMultiplier - 1) / peakTimestep) *
+                    this.leaderTimestep +
+                1
+            );
         } else {
-            return 5 / 3 - (2 * this.leaderTimestep) / (3 * this.maxLeaderTimestep);
+            return (
+                ((1 - changeOfLeaderOptions.peakSpeedMultiplier) /
+                    (changeOfLeaderOptions.maxLeaderTimestep - peakTimestep)) *
+                    (this.leaderTimestep - peakTimestep) +
+                changeOfLeaderOptions.peakSpeedMultiplier
+            );
         }
     }
 
