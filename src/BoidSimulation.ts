@@ -5,7 +5,6 @@ import { Floor } from "./objects/Floor";
 import { SeparationRule } from "./rules/SeparationRule";
 import { CohesionRule } from "./rules/CohesionRule";
 import { AlignmentRule } from "./rules/AlignmentRule";
-import { Bounds3D } from "./Bounds3D";
 import { WorldBoundaryRule } from "./rules/WorldBoundaryRule";
 import { CollisionAvoidanceRule } from "./rules/CollisionAvoidanceRule";
 import { Arena } from "./objects/Arena";
@@ -15,6 +14,11 @@ import { Sky } from "./objects/Sky";
 import * as THREE from "three";
 import { SunParams } from "./objects/Sun";
 import { ShaderMaterial } from "three";
+import { World } from "./objects/world/World";
+import { defaultWorld } from "./worlds/Default";
+import { smallWorld } from "./worlds/SmallWorld";
+import { Bounds3D } from "./Bounds3D";
+import { WorldTools } from "./objects/world/WorldTools";
 import { FollowLeaderRule } from "./rules/FollowLeaderRule";
 
 export interface BoidSimulationParams {
@@ -22,6 +26,7 @@ export interface BoidSimulationParams {
     visibilityThreshold: number;
     maxSpeed: number;
     acceleration: number;
+    worldName: string;
     worldDimens: Bounds3D;
     photorealisticRendering: boolean;
     randomnessPerTimestep: number;
@@ -30,7 +35,16 @@ export interface BoidSimulationParams {
 }
 
 export class BoidSimulation extends Simulation {
+
     controlsGui: GUI;
+
+    worlds: World[] = [
+        defaultWorld, smallWorld
+    ];
+
+    worldNames: string[] = WorldTools.getNames(this.worlds);
+
+    currentWorldName: string = defaultWorld.name;
 
     boids: Boid[] = [];
     private nextBoidId: BoidId = 0;
@@ -40,7 +54,8 @@ export class BoidSimulation extends Simulation {
         visibilityThreshold: 25,
         maxSpeed: 0.5,
         acceleration: 0.01,
-        worldDimens: Bounds3D.centredXZ(200, 200, 100),
+        worldName: defaultWorld.name,
+        worldDimens: WorldTools.getWorldByName(this.worlds, this.currentWorldName).get3DBoundaries(),
         photorealisticRendering: false,
         randomnessPerTimestep: 0.01,
         randomnessLimit: 0.1,
@@ -64,7 +79,8 @@ export class BoidSimulation extends Simulation {
         new FollowLeaderRule(5),
     ];
 
-    private readonly floor?: Floor;
+    private floor?: Floor;
+    private arena?: Arena;
     private water?: Water;
     private sky?: Sky;
     private sun?: THREE.Vector3;
@@ -78,17 +94,19 @@ export class BoidSimulation extends Simulation {
             this.simParams = params;
         }
 
-        // init controls GUI
+        // Init controls GUI
         this.controlsGui = new GUI({
             hideable: false,
         });
+
+        this.controlsGui.add(this.simParams, "worldName", this.worldNames).name("World");
         this.controlsGui.add(this.simParams, "boidCount", 10, 200).name("Boid count");
         this.controlsGui.add(this.simParams, "maxSpeed", 0.1, 2, 0.01).name("Max speed");
         this.controlsGui
             .add(this.simParams, "visibilityThreshold", 5, 100)
             .name("Visibility radius");
 
-        // controls to change level of randomness
+        // Controls to change level of randomness
         const randomnessGui = this.controlsGui.addFolder("Randomness");
         randomnessGui.open();
         randomnessGui
@@ -96,7 +114,7 @@ export class BoidSimulation extends Simulation {
             .name("Per timestep");
         randomnessGui.add(this.simParams, "randomnessLimit", 0, 0.5, 0.01).name("Limit");
 
-        // controls to change rule weights
+        // Controls to change rule weights
         const ruleWeightsGui = this.controlsGui.addFolder("Rule weights");
         ruleWeightsGui.open();
         for (const rule of this.rules) {
@@ -131,14 +149,16 @@ export class BoidSimulation extends Simulation {
             .add(this.simParams.changeOfLeaderBoidOptions, "peakSpeedTimestepFraction", 0, 1, 0.05)
             .name("Speed profile");
 
-        // add a floor to the simulation
+        const world = WorldTools.getWorldByName(this.worlds, this.simParams.worldName);
+
+        // Add a floor to the simulation
         if (!this.simParams.photorealisticRendering) {
-            this.floor = new Floor();
+            this.floor = new Floor(this.simParams);
             this.addToScene(this.floor.mesh);
         }
 
-        const arena = new Arena(this.simParams);
-        this.addToScene(arena.mesh);
+        this.arena = new Arena(this.simParams);
+        this.addToScene(this.arena.mesh);
 
         if (this.simParams.photorealisticRendering) {
             this.initializePhotorealisticRendering();
@@ -222,14 +242,20 @@ export class BoidSimulation extends Simulation {
     }
 
     update() {
+
+        // Reload the world if needed
+        if (this.currentWorldName !== this.simParams.worldName) {
+            this.reloadWorld();
+        }
+
         // update boids before updating base simulation to rerender
         this.updateBoidCount();
 
         this.boids.map((boid) =>
             boid.update(this.rules, {
                 neighbours: this.getBoidNeighbours(boid),
-                simParams: this.simParams,
-            }),
+                simParams: this.simParams
+            })
         );
 
         if (
@@ -243,6 +269,37 @@ export class BoidSimulation extends Simulation {
         super.update();
     }
 
+    reloadWorld() {
+
+        const world = WorldTools.getWorldByName(this.worlds, this.simParams.worldName);
+        this.simParams.worldDimens = world.get3DBoundaries();
+
+        // Remove old boids
+        for (let boid of this.boids) {
+            this.removeFromScene(boid.mesh);
+        }
+        this.boids = [];
+
+        // Arena
+        if (this.arena !== undefined && this.arena instanceof Arena) {
+            this.removeFromScene(this.arena.mesh);
+        }
+        this.arena = new Arena(this.simParams);
+        this.addToScene(this.arena.mesh);
+
+        // Floor
+        if (!this.simParams.photorealisticRendering) {
+            if (this.floor !== undefined && this.floor instanceof Floor) {
+                this.removeFromScene(this.floor.mesh);
+            }
+            this.floor = new Floor(this.simParams);
+            this.addToScene(this.floor.mesh);
+        }
+
+        this.currentWorldName = this.simParams.worldName;
+
+    }
+
     updateBoidCount() {
         if (this.simParams.boidCount === this.boids.length) {
             return;
@@ -252,9 +309,11 @@ export class BoidSimulation extends Simulation {
         let difference = this.simParams.boidCount - this.boids.length;
         while (difference > 0) {
             // generate new boids
-            const boid = ChangeOfLeaderBoid.generateWithRandomPosAndVel(this.newBoidId(), {
-                acceleration: this.simParams.acceleration,
-            });
+            const boid = ChangeOfLeaderBoid.generateWithRandomPosAndVel(this.newBoidId(),
+                {
+                    positionBounds: this.simParams.worldDimens,
+                    acceleration: this.simParams.acceleration,
+                });
             this.addToScene(boid.mesh);
             this.boids.push(boid);
             difference--;
@@ -266,7 +325,7 @@ export class BoidSimulation extends Simulation {
                 // handle the case that for some reason there's no boid to remove
                 break;
             }
-            this.removeObjectFromScene(boid.mesh);
+            this.removeFromScene(boid.mesh);
             difference++;
         }
     }
@@ -289,4 +348,5 @@ export class BoidSimulation extends Simulation {
         }
         return neighbours;
     }
+
 }
