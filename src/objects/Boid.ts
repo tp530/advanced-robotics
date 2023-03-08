@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { Rule, RuleArguments } from "../rules/Rule";
-import { Bounds3D } from "../Bounds3D";
 import { Material } from "three";
 
 export interface BoidOptions {
@@ -87,50 +86,6 @@ export class Boid {
 
     get position() {
         return this.mesh.position;
-    }
-
-    /**
-     * Factory method to generate a boid with random position and velocity.
-     * Options can be passed to control the min/max bounds for the random generation.
-     * For any bounds that aren't passed, sensible defaults are used.
-     */
-    static generateWithRandomPosAndVel(options?: {
-        positionBounds?: Bounds3D;
-        velocityBounds?: Bounds3D;
-        acceleration?: number;
-        photorealisticRendering: boolean;
-    }): Boid {
-        // default position and velocity bounds
-        const minXPos = options?.positionBounds?.xMin ?? -100;
-        const maxXPos = options?.positionBounds?.xMax ?? 100;
-        const minYPos = options?.positionBounds?.yMin ?? 0;
-        const maxYPos = options?.positionBounds?.yMax ?? 50;
-        const minZPos = options?.positionBounds?.zMin ?? -100;
-        const maxZPos = options?.positionBounds?.zMax ?? 100;
-
-        const minXVel = options?.velocityBounds?.xMin ?? -0.2;
-        const maxXVel = options?.velocityBounds?.xMax ?? 0.2;
-        const minYVel = options?.velocityBounds?.yMin ?? -0.02;
-        const maxYVel = options?.velocityBounds?.yMax ?? 0.02;
-        const minZVel = options?.velocityBounds?.zMin ?? -0.2;
-        const maxZVel = options?.velocityBounds?.zMax ?? 0.2;
-
-        const acceleration = options?.acceleration ?? 0.01;
-
-        return new Boid({
-            position: new THREE.Vector3(
-                Math.random() * (maxXPos - minXPos) + minXPos,
-                Math.random() * (maxYPos - minYPos) + minYPos,
-                Math.random() * (maxZPos - minZPos) + minZPos,
-            ),
-            velocity: new THREE.Vector3(
-                Math.random() * (maxXVel - minXVel) + minXVel,
-                Math.random() * (maxYVel - minYVel) + minYVel,
-                Math.random() * (maxZVel - minZVel) + minZVel,
-            ),
-            acceleration,
-            photorealisticRendering: options !== undefined && options.photorealisticRendering,
-        });
     }
 
     update(rules: Rule[], ruleArguments: RuleArguments) {
