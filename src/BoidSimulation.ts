@@ -29,6 +29,7 @@ export interface BoidSimulationParams {
 
 export class BoidSimulation extends Simulation {
     controlsGui: GUI;
+    visibilityGui: GUI;
 
     boids: Boid[] = [];
 
@@ -82,16 +83,6 @@ export class BoidSimulation extends Simulation {
         });
         this.controlsGui.add(this.simParams, "boidCount", 10, 200).name("Boid count");
         this.controlsGui.add(this.simParams, "maxSpeed", 0.1, 2, 0.01).name("Max speed");
-        this.controlsGui
-            .add(this.simParams, "visibilityThreshold", 5, 100)
-            .name("Visibility radius");
-        this.controlsGui
-            .add(this.simParams, "angularThreshold", 10, 180)
-            .name("Visibility angle");
-
-        this.controlsGui
-            .add(this.simParams, "angularNoise", 0, 2, 0.01)
-            .name("Angular noise");
 
 
         // controls to change level of randomness
@@ -109,12 +100,36 @@ export class BoidSimulation extends Simulation {
             ruleWeightsGui.add(rule, "weight", rule.minWeight, rule.maxWeight, 0.1).name(rule.name);
         }
 
-        const dropoffRulesGui = this.controlsGui.addFolder("Dropoff Rules");
+
+        // add a floor to the simulation
+        const floor = new Floor();
+        this.addObjectToScene(floor.mesh);
+
+        const arena = new Arena(this.simParams.worldDimens);
+        this.addObjectsToScene(arena.mesh);
+
+
+        this.visibilityGui = new GUI({
+            hideable: false,
+        });
+
+        this.visibilityGui
+            .add(this.simParams, "visibilityThreshold", 5, 100)
+            .name("Visibility radius");
+        this.visibilityGui
+            .add(this.simParams, "angularThreshold", 10, 180)
+            .name("Visibility angle");
+
+        this.visibilityGui
+            .add(this.simParams, "angularNoise", 0, 2, 0.01)
+            .name("Angular noise");
+        
+        const dropoffRulesGui = this.visibilityGui.addFolder("Dropoff Rules");
         dropoffRulesGui.open();
 
         // add dropoff options
         dropoffRulesGui.add(this.enabledDropoff, "0").name("Enable " + this.dropoffs[0].name).onChange(v => {if (v) {this.simParams.dropoffRule = this.dropoffs[0]; this.enabledDropoff[1] = this.enabledDropoff[2] = this.enabledDropoff[3] = false}}).listen()
-        dropoffRulesGui.add(this.dropoffs[0], "constant", this.dropoffs[0].minConst, this.dropoffs[0].maxConst, 0.01).name(this.dropoffs[0].name + " constant")
+        // dropoffRulesGui.add(this.dropoffs[0], "constant", this.dropoffs[0].minConst, this.dropoffs[0].maxConst, 0.01).name(this.dropoffs[0].name + " constant")
 
         dropoffRulesGui.add(this.enabledDropoff, "1").name("Enable " + this.dropoffs[1].name).onChange(v => {if (v) {this.simParams.dropoffRule = this.dropoffs[1]; this.enabledDropoff[0] = this.enabledDropoff[2] = this.enabledDropoff[3] = false}}).listen()
         dropoffRulesGui.add(this.dropoffs[1], "constant", this.dropoffs[1].minConst, this.dropoffs[1].maxConst, 0.01).name(this.dropoffs[1].name + " constant")
@@ -124,15 +139,7 @@ export class BoidSimulation extends Simulation {
 
         dropoffRulesGui.add(this.enabledDropoff, "3").name("Enable " + this.dropoffs[3].name).onChange(v => {if (v) {this.simParams.dropoffRule = this.dropoffs[3]; this.enabledDropoff[1] = this.enabledDropoff[2] = this.enabledDropoff[0] = false}}).listen()
         dropoffRulesGui.add(this.dropoffs[3], "constant", this.dropoffs[3].minConst, this.dropoffs[3].maxConst, 0.01).name(this.dropoffs[3].name + " constant")
-        dropoffRulesGui.add(this.dropoffs[3], "base", this.dropoffs[3].minConst, this.dropoffs[3].maxConst, 0.01).name(this.dropoffs[3].name + "  base")
-
-
-        // add a floor to the simulation
-        const floor = new Floor();
-        this.addObjectToScene(floor.mesh);
-
-        const arena = new Arena(this.simParams.worldDimens);
-        this.addObjectsToScene(arena.mesh);
+        dropoffRulesGui.add(this.dropoffs[3], "base", this.dropoffs[3].minConst, this.simParams.visibilityThreshold, 0.01).name(this.dropoffs[3].name + " base")
     }
 
     update() {

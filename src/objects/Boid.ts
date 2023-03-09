@@ -171,7 +171,7 @@ export class Boid {
         }
     }
 
-    private normal(mean: number, sd: number): number{
+    private normal(mean: number, sd: number, range: number[]): number{
         let s: number, u: number, v: number;
 
         if (sd ==  0) return mean;
@@ -183,14 +183,17 @@ export class Boid {
         } while (s >= 1);
         let norm = u * Math.sqrt(-2 * Math.log(s)/s);
         
-        return sd * norm + mean
+        let res = sd * norm + mean
+
+        return (range[0] < res && res < range[1] ? res : this.normal(mean, sd, range))
     }
 
     private addNoise(v: Spherical, sd: number){
-        return v.set(v.radius, this.normal(v.phi, sd), this.normal(v.theta, sd))
+        let res = v.clone().set(v.radius, this.normal(v.phi, sd, [v.phi - Math.PI/2, v.phi + Math.PI/2]), this.normal(v.theta, 2*sd, [v.theta - Math.PI, v.theta + Math.PI]))
+        return res
     }
 
     toOther(other: Boid, params: BoidSimulationParams): THREE.Vector3{
-        return (new Vector3).setFromSpherical(this.addNoise((new Spherical()).setFromVector3(this.position.clone().addScaledVector(other.position, -1)), params.angularNoise));
+        return (new Vector3()).setFromSpherical(this.addNoise((new Spherical()).setFromVector3(this.position.clone().addScaledVector(other.position, -1)), params.angularNoise));
     }
 }

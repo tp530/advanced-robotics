@@ -17,7 +17,7 @@ export abstract class Dropoff{
 
     constructor(constant: number, options?: DropoffOptions){
         this.constant = constant
-        this.minConst = options?.minConst ?? 0
+        this.minConst = options?.minConst ?? 0.1
         this.maxConst = options?.maxConst ?? 2 * constant
     }
 

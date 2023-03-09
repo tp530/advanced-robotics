@@ -20,6 +20,7 @@ export class AlignmentRule extends Rule {
             alignment.addScaledVector(neighbour.velocity, weight);
             weightSum += weight;
         }
+        if (weightSum == 0) return new THREE.Vector3()
         alignment.divideScalar(weightSum);
 
         //console.log(alignment)

@@ -15,14 +15,16 @@ export class SeparationRule extends Rule {
         let weightSum = 0;
 
         for (const neighbour of args.neighbours) {
-            let weight = args.simParams.dropoffRule.fn(thisBoid.toOther(neighbour, args.simParams).length())
-            const diff = new THREE.Vector3();
-            diff.subVectors(thisBoid.position, neighbour.position);
-            separation.addScaledVector(diff, weight);
+            let toOther = thisBoid.toOther(neighbour, args.simParams)
+            let weight = args.simParams.dropoffRule.fn(toOther.length())
+            //const diff = new THREE.Vector3();
+            // diff.subVectors(thisBoid.position, neighbour.position);
+            separation.addScaledVector(toOther, weight);
             weightSum += weight
         }
 
         //console.log(weightSum)
+        if (weightSum == 0) return new THREE.Vector3
         separation.divideScalar(weightSum);
 
         //console.log(separation)
