@@ -1,7 +1,7 @@
 import { World } from "../objects/world/World";
 
 export const obstacles1 = new World({
-    name: "Obstacles 1",
+    name: "Obstacles",
     dimensions: {
         x: 200,
         y: 200,
@@ -9,9 +9,9 @@ export const obstacles1 = new World({
     },
     obstacles: {
         cylinders: [
-            { basePoint: {x: 70, y: 0, z: 30}, radius: 10, height: 50},
-            { basePoint: {x: 0, y: 0, z: 0}, radius: 20, height: 50},
-            { basePoint: {x: -70, y: 0, z: -50}, radius: 20, height: 50}
+            { basePoint: {x: 70, y: -5, z: 30}, radius: 10, height: 55},
+            { basePoint: {x: 0, y: -5, z: 0}, radius: 20, height: 55},
+            { basePoint: {x: -70, y: -5, z: -50}, radius: 20, height: 55}
         ]
     }
 });

@@ -1,6 +1,7 @@
 import { Bounds3D } from "./Bounds3D";
 import { Boid } from "./objects/Boid";
 import * as THREE from "three";
+import { RenderingModes } from "./BoidSimulation";
 
 /*
  * All available types of boid that can be generated.
@@ -22,7 +23,7 @@ export class BoidGenerator {
             positionBounds?: Bounds3D;
             velocityBounds?: Bounds3D;
             acceleration?: number;
-            photorealisticRendering: boolean;
+            rendering: RenderingModes;
         },
     ): Boid {
         const type = options?.boidType ?? BoidType.Normal;
@@ -44,7 +45,7 @@ export class BoidGenerator {
 
         const acceleration = options?.acceleration ?? 0.01;
 
-        const photorealisticRendering = options?.photorealisticRendering ?? false;
+        const rendering = options?.rendering ?? RenderingModes.Simple;
 
         const randomPosition = new THREE.Vector3(
             Math.random() * (maxXPos - minXPos) + minXPos,
@@ -65,7 +66,7 @@ export class BoidGenerator {
                     position: randomPosition,
                     velocity: randomVelocity,
                     acceleration,
-                    photorealisticRendering,
+                    rendering,
                 });
         }
     }

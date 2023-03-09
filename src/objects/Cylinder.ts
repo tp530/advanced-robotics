@@ -1,16 +1,17 @@
 import * as THREE from "three";
 import { Material } from "three";
+import { RenderingModes } from "../BoidSimulation";
 import { ICylinderDescription } from "./world/ICylinderDescription";
 
 export interface CylinderOptions {
     description: ICylinderDescription;
-    photorealisticRendering: boolean;
+    rendering: string;
 }
 
 export class Cylinder {
 
     readonly mesh: Array<THREE.Object3D<THREE.Event>>;
-    private readonly radialSegments: number = 32;
+    private readonly radialSegments: number = 16;
     private innerMargin: number = 0.05;
 
     constructor(options: CylinderOptions) {
@@ -24,11 +25,13 @@ export class Cylinder {
         );
 
         let material: Material;
-        if (options.photorealisticRendering) {
+        if (options.rendering === RenderingModes.Photorealistic) {
             material = new THREE.MeshStandardMaterial({
                 color: 0x90d74b,
                 metalness: 1,
             });
+            material.transparent = true;
+            material.opacity = 0.75;
         } else {
             material = new THREE.MeshBasicMaterial({
                 color: 0x90d74b,

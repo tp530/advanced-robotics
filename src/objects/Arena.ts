@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { BoidSimulationParams } from "../BoidSimulation";
+import { BoidSimulationParams, RenderingModes } from "../BoidSimulation";
 
 export class Arena {
 
@@ -11,7 +11,7 @@ export class Arena {
 
         let dims = params.worldDimens;
 
-        if (params.photorealisticRendering) {
+        if (params.rendering === RenderingModes.Photorealistic) {
             this.wallWidth = 5;
             this.floorGap = 10;
         }

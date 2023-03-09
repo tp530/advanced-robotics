@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Rule, RuleArguments } from "../rules/Rule";
 import { Material } from "three";
+import { RenderingModes } from "../BoidSimulation";
 
 export interface BoidOptions {
     // Initial boid position
@@ -9,7 +10,7 @@ export interface BoidOptions {
     velocity: THREE.Vector3;
     // Boid acceleration (change in velocity per timestep)
     acceleration: number;
-    photorealisticRendering: boolean;
+    rendering: RenderingModes;
 }
 
 export class Boid {
@@ -45,14 +46,14 @@ export class Boid {
         const geometry = new THREE.ConeGeometry(1, 4);
 
         let material: Material;
-        if (options.photorealisticRendering) {
+        if (options.rendering === RenderingModes.Photorealistic) {
             material = new THREE.MeshStandardMaterial({
-                color: this.generateIndividualColour(options.photorealisticRendering),
+                color: this.generateIndividualColour(options.rendering),
                 metalness: 1,
             });
         } else {
             material = new THREE.MeshBasicMaterial({
-                color: this.generateIndividualColour(options.photorealisticRendering),
+                color: this.generateIndividualColour(options.rendering),
             });
         }
 
@@ -68,9 +69,9 @@ export class Boid {
     /**
      * Randomly generate a version of `this.baseColour`, with lightness adjusted.
      */
-    private generateIndividualColour(photorealisticRendering: boolean) {
+    private generateIndividualColour(rendering: RenderingModes) {
         let lightnessAdjust: number;
-        if (photorealisticRendering) {
+        if (rendering === RenderingModes.Photorealistic) {
             lightnessAdjust = Math.random() * 0.8;
         } else {
             lightnessAdjust = Math.random() * 0.4 - 0.2;
