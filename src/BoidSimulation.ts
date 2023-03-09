@@ -64,7 +64,17 @@ export class BoidSimulation extends Simulation {
         randomnessLimit: 0.1,
     };
 
-    rules: Rule[] = [];
+    // initial world will get set in constructor by calling reloadWorld
+    private obstacleAvoidRule = new ObstacleAvoidanceRule(10, {world: defaultWorld});
+
+    rules: Rule[] = [
+        new SeparationRule(0.8),
+        new CohesionRule(1),
+        new AlignmentRule(1),
+        new WorldBoundaryRule(10),
+        new CollisionAvoidanceRule(10),
+        this.obstacleAvoidRule,
+    ];
 
     private floor?: Floor;
     private arena?: Arena;
@@ -109,7 +119,6 @@ export class BoidSimulation extends Simulation {
         }
 
         this.reloadWorld();
-
     }
 
     initializePhotorealisticRendering() {
@@ -222,18 +231,10 @@ export class BoidSimulation extends Simulation {
         const world = WorldTools.getWorldByName(this.worlds, this.simParams.worldName);
         this.simParams.worldDimens = world.get3DBoundaries();
 
-        this.clearScene()
+        this.clearScene();
 
-        // Add rules
-        this.rules = [
-            new SeparationRule(0.8),
-            new CohesionRule(1),
-            new AlignmentRule(1),
-            new WorldBoundaryRule(10),
-            new ObstacleAvoidanceRule(10, {world: world}),
-            new CollisionAvoidanceRule(10)
-        ];
-    
+        this.obstacleAvoidRule.setWorld(world);
+
         // Remove old boids
         this.boids = [];
 

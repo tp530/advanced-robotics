@@ -21,12 +21,16 @@ export class ObstacleAvoidanceRule extends Rule {
      */
     private readonly SHARPNESS;
 
-    private readonly world: World;
+    private world: World;
 
     constructor(weight: number, options: ObstacleAvoiodanceRuleOptions) {
         super(weight, options);
         this.SHARPNESS = options.sharpness ?? 3;
         this.world = options.world;
+    }
+
+    setWorld(world: World) {
+        this.world = world;
     }
 
     calculateVector(thisBoid: Boid, _args: RuleArguments): THREE.Vector3 {
