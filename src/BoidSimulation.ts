@@ -8,7 +8,7 @@ import { AlignmentRule } from "./rules/AlignmentRule";
 import { WorldBoundaryRule } from "./rules/WorldBoundaryRule";
 import { CollisionAvoidanceRule } from "./rules/CollisionAvoidanceRule";
 import { Arena } from "./objects/Arena";
-import { ChangeOfLeaderBoid, ChangeOfLeaderBoidOptions } from "./objects/ChangeOfLeaderBoid";
+import { ChangeOfLeaderBoidOptions } from "./objects/ChangeOfLeaderBoid";
 import { Water } from "./objects/Water";
 import { Sky } from "./objects/Sky";
 import * as THREE from "three";
@@ -69,7 +69,7 @@ export class BoidSimulation extends Simulation {
         randomnessPerTimestep: 0.01,
         randomnessLimit: 0.1,
         changeOfLeaderBoidOptions: {
-            maxLeaderTimestep: 250,
+            maxLeaderTimestep: 200,
             eccentricityThreshold: 0.5,
             neighbourCountThreshold: 8,
             becomeLeaderProbability: 0.001,

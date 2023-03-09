@@ -1,7 +1,6 @@
 import { Boid, BoidId } from "./Boid";
 import { Rule, RuleArguments } from "../rules/Rule";
 import * as THREE from "three";
-import { Bounds3D } from "../Bounds3D";
 import { CohesionRule } from "../rules/CohesionRule";
 
 export enum LeaderBoidStatus {
@@ -32,6 +31,7 @@ export interface ChangeOfLeaderBoidOptions {
 export class ChangeOfLeaderBoid extends Boid {
     status = LeaderBoidStatus.NotLeader;
     private leaderTimestep = 0;
+    private maxLeaderTimestep = 0;
 
     followingBoid: BoidId | null = null;
 
@@ -39,7 +39,7 @@ export class ChangeOfLeaderBoid extends Boid {
         const changeOfLeaderOptions = ruleArguments.simParams.changeOfLeaderBoidOptions;
         // stop being a leader after some time
         if (this.status === LeaderBoidStatus.Leader) {
-            this.checkIfStopBeingLeader(changeOfLeaderOptions);
+            this.checkIfStopBeingLeader();
         }
         switch (this.status) {
             case LeaderBoidStatus.Leader: {
@@ -91,13 +91,9 @@ export class ChangeOfLeaderBoid extends Boid {
         super.update(rules, ruleArguments);
     }
 
-    private checkIfStopBeingLeader(changeOfLeaderOptions: ChangeOfLeaderBoidOptions) {
+    private checkIfStopBeingLeader() {
         // add some randomness around maxLeaderTimestep
-        if (
-            this.leaderTimestep >
-            changeOfLeaderOptions.maxLeaderTimestep -
-                (Math.random() * changeOfLeaderOptions.maxLeaderTimestep) / 3
-        ) {
+        if (this.leaderTimestep > this.maxLeaderTimestep) {
             this.status = LeaderBoidStatus.NotLeader;
         }
     }
@@ -129,6 +125,10 @@ export class ChangeOfLeaderBoid extends Boid {
             const isEscaping = Math.random() > 1 - changeOfLeaderOptions.becomeLeaderProbability;
             if (isEscaping) {
                 this.status = LeaderBoidStatus.Leader;
+                // Add some randomness to the number of timesteps to stop being a leader after
+                this.maxLeaderTimestep =
+                    ruleArguments.simParams.changeOfLeaderBoidOptions.maxLeaderTimestep *
+                    (Math.random() * 0.5 + 0.75);
             }
         }
     }
