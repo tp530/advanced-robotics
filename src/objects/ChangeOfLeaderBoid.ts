@@ -46,7 +46,7 @@ export class ChangeOfLeaderBoid extends Boid {
                 this.leaderTimestep++;
                 this.updateLeader(rules, ruleArguments);
                 if (changeOfLeaderOptions.colourBoids) {
-                    this.setColour(new THREE.Color().setHSL(0.2, 1, 0.5));
+                    this.setColour(new THREE.Color().setHSL(0.1, 1, 0.4));
                 }
                 break;
             }
@@ -55,7 +55,7 @@ export class ChangeOfLeaderBoid extends Boid {
                 this.allowChanceToBecomeLeader(ruleArguments);
                 // set colour of boid if we're following a leader
                 if (this.followingBoid !== null && changeOfLeaderOptions.colourBoids) {
-                    this.setColour(new THREE.Color().setHSL(0, 0.8, 0.5));
+                    this.setColour(new THREE.Color().setHSL(0, 1, 0.4));
                 }
                 break;
             }
@@ -118,7 +118,11 @@ export class ChangeOfLeaderBoid extends Boid {
         // colour boids on the edge of the flock that have a chance of escaping,
         // and all other boids default colour
         if (changeOfLeaderOptions.colourBoids) {
-            this.setColour(new THREE.Color().setHSL(0.7, 1, hasChanceOfEscaping ? 0.7 : 0.1));
+            if (hasChanceOfEscaping) {
+                this.setColour(new THREE.Color().setHSL(0.7, 0.4, 0.5));
+            } else {
+                this.setColour(new THREE.Color().setHSL(0.7, 1, 0.1));
+            }
         }
 
         if (hasChanceOfEscaping) {
