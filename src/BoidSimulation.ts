@@ -112,13 +112,20 @@ export class BoidSimulation extends Simulation {
         const dropoffRulesGui = this.controlsGui.addFolder("Dropoff Rules");
         dropoffRulesGui.open();
 
+        // add dropoff options
+        dropoffRulesGui.add(this.enabledDropoff, "0").name("Enable " + this.dropoffs[0].name).onChange(v => {if (v) {this.simParams.dropoffRule = this.dropoffs[0]; this.enabledDropoff[1] = this.enabledDropoff[2] = this.enabledDropoff[3] = false}}).listen()
+        dropoffRulesGui.add(this.dropoffs[0], "constant", this.dropoffs[0].minConst, this.dropoffs[0].maxConst, 0.01).name(this.dropoffs[0].name + " constant")
 
+        dropoffRulesGui.add(this.enabledDropoff, "1").name("Enable " + this.dropoffs[1].name).onChange(v => {if (v) {this.simParams.dropoffRule = this.dropoffs[1]; this.enabledDropoff[0] = this.enabledDropoff[2] = this.enabledDropoff[3] = false}}).listen()
+        dropoffRulesGui.add(this.dropoffs[1], "constant", this.dropoffs[1].minConst, this.dropoffs[1].maxConst, 0.01).name(this.dropoffs[1].name + " constant")
 
-        for (var i: number = 0; i<this.dropoffs.length; i++) {
-            let drop = this.dropoffs[i]
-            dropoffRulesGui.add(this.enabledDropoff, i.toString()).onChange((v) => {if (v) {this.simParams.dropoffRule = this.dropoffs[i]} this.enabledDropoffKeys.forEach(j => {this.enabledDropoff[j as keyof typeof this.enabledDropoff] = (i==j ? v : !v)});})
-            dropoffRulesGui.add(drop, "constant", drop.minConst, drop.maxConst, drop.constant).name(drop.name + " constant")
-        }
+        dropoffRulesGui.add(this.enabledDropoff, "2").name("Enable " + this.dropoffs[2].name).onChange(v => {if (v) {this.simParams.dropoffRule = this.dropoffs[2]; this.enabledDropoff[1] = this.enabledDropoff[0] = this.enabledDropoff[3] = false}}).listen()
+        dropoffRulesGui.add(this.dropoffs[2], "constant", this.dropoffs[2].minConst, this.dropoffs[2].maxConst, 0.01).name(this.dropoffs[2].name + " constant")
+
+        dropoffRulesGui.add(this.enabledDropoff, "3").name("Enable " + this.dropoffs[3].name).onChange(v => {if (v) {this.simParams.dropoffRule = this.dropoffs[3]; this.enabledDropoff[1] = this.enabledDropoff[2] = this.enabledDropoff[0] = false}}).listen()
+        dropoffRulesGui.add(this.dropoffs[3], "constant", this.dropoffs[3].minConst, this.dropoffs[3].maxConst, 0.01).name(this.dropoffs[3].name + " constant")
+        dropoffRulesGui.add(this.dropoffs[3], "base", this.dropoffs[3].minConst, this.dropoffs[3].maxConst, 0.01).name(this.dropoffs[3].name + "  base")
+
 
         // add a floor to the simulation
         const floor = new Floor();

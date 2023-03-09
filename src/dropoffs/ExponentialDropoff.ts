@@ -5,7 +5,7 @@ export class ExponentialDropoff extends Dropoff{
     func = "{const}^(-{dist})"
 
     fn(dist: number): number {
-        return Math.exp(-dist)/Math.exp(this.constant)
+        return Math.pow(dist, this.constant)
     }
 
 }
