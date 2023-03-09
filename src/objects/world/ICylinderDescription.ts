@@ -1,7 +1,7 @@
 import { IXYZ } from "./IXYZ";
 
-export interface ICylinder {
+export interface ICylinderDescription {
     basePoint: IXYZ;
-    diameter: number;
+    radius: number;
     height: number;
 }

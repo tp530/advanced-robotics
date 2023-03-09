@@ -8,8 +8,6 @@ export const smallWorld = new World({
         z: 50
     },
     obstacles: {
-        cylinders: [
-            { basePoint: {x: 10, y: 20, z: 30}, diameter: 20, height: 50}
-        ]
+        cylinders: []
     }
 });
