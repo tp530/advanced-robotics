@@ -19,6 +19,10 @@ import {smallWorld} from "./worlds/SmallWorld";
 import {Bounds3D} from "./Bounds3D";
 import {WorldTools} from "./objects/world/WorldTools";
 import {BoidGenerator, BoidType} from "./BoidGenerator";
+import { obstacles1 } from "./worlds/Obstacles1";
+import { Cylinder } from "./objects/Cylinder";
+import { ObstacleAvoidanceRule } from "./rules/ObstacleAvoidanceRule";
+import { Rule } from "./rules/Rule";
 
 export interface BoidSimulationParams {
     boidCount: number;
@@ -38,7 +42,7 @@ export class BoidSimulation extends Simulation {
     controlsGui: GUI;
 
     worlds: World[] = [
-        defaultWorld, smallWorld
+        defaultWorld, smallWorld, obstacles1
     ];
 
     worldNames: string[] = WorldTools.getNames(this.worlds);
@@ -60,12 +64,16 @@ export class BoidSimulation extends Simulation {
         randomnessLimit: 0.1,
     };
 
-    rules = [
+    // initial world will get set in constructor by calling reloadWorld
+    private obstacleAvoidRule = new ObstacleAvoidanceRule(10, {world: defaultWorld});
+
+    rules: Rule[] = [
         new SeparationRule(0.8),
         new CohesionRule(1),
         new AlignmentRule(1),
         new WorldBoundaryRule(10),
         new CollisionAvoidanceRule(10),
+        this.obstacleAvoidRule,
     ];
 
     private floor?: Floor;
@@ -110,20 +118,7 @@ export class BoidSimulation extends Simulation {
             ruleWeightsGui.add(rule, "weight", rule.minWeight, rule.maxWeight, 0.1).name(rule.name);
         }
 
-        const world = WorldTools.getWorldByName(this.worlds, this.simParams.worldName);
-
-        // Add a floor to the simulation
-        if (!this.simParams.photorealisticRendering) {
-            this.floor = new Floor(this.simParams);
-            this.addToScene(this.floor.mesh);
-        }
-
-        this.arena = new Arena(this.simParams);
-        this.addToScene(this.arena.mesh);
-
-        if (this.simParams.photorealisticRendering) {
-            this.initializePhotorealisticRendering();
-        }
+        this.reloadWorld();
     }
 
     initializePhotorealisticRendering() {
@@ -236,26 +231,32 @@ export class BoidSimulation extends Simulation {
         const world = WorldTools.getWorldByName(this.worlds, this.simParams.worldName);
         this.simParams.worldDimens = world.get3DBoundaries();
 
+        this.clearScene();
+
+        this.obstacleAvoidRule.setWorld(world);
+
         // Remove old boids
-        for (let boid of this.boids) {
-            this.removeFromScene(boid.mesh);
-        }
         this.boids = [];
 
         // Arena
-        if (this.arena !== undefined && this.arena instanceof Arena) {
-            this.removeFromScene(this.arena.mesh);
-        }
         this.arena = new Arena(this.simParams);
         this.addToScene(this.arena.mesh);
 
-        // Floor
-        if (!this.simParams.photorealisticRendering) {
-            if (this.floor !== undefined && this.floor instanceof Floor) {
-                this.removeFromScene(this.floor.mesh);
-            }
+        if (this.simParams.photorealisticRendering) {
+            this.initializePhotorealisticRendering();
+        } else {
+            // Floor
             this.floor = new Floor(this.simParams);
             this.addToScene(this.floor.mesh);
+        }
+
+        // Obstacles
+        for (const description of world.obstacles.cylinders) {
+            const cylinder = new Cylinder({
+                description: description, 
+                photorealisticRendering: this.simParams.photorealisticRendering
+            });
+            this.addToScene(cylinder.mesh);
         }
 
         this.currentWorldName = this.simParams.worldName;

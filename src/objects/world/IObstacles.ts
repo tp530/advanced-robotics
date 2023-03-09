@@ -1,5 +1,5 @@
-import { ICylinder } from "./ICylinder";
+import { ICylinderDescription } from "./ICylinderDescription";
 
 export interface IObstacles {
-    cylinders: Array<ICylinder>;
+    cylinders: Array<ICylinderDescription>;
 }

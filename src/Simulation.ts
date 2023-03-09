@@ -111,4 +111,10 @@ export class Simulation {
             this.scene.remove(objects);
         }
     }
+
+    clearScene() {
+        while(this.scene.children.length > 0) { 
+            this.scene.remove(this.scene.children[0]); 
+        }
+    }
 }
