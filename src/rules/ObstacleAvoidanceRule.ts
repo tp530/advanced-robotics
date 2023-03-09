@@ -25,7 +25,7 @@ export class ObstacleAvoidanceRule extends Rule {
 
     constructor(weight: number, options: ObstacleAvoiodanceRuleOptions) {
         super(weight, options);
-        this.SHARPNESS = options.sharpness ?? 10;
+        this.SHARPNESS = options.sharpness ?? 3;
         this.world = options.world;
     }
 
@@ -45,7 +45,7 @@ export class ObstacleAvoidanceRule extends Rule {
             if (distance < 0) {
                 distance = 0;
             }
-            const avoidanceMagnitude = Math.pow(this.SHARPNESS, -distance);
+            const avoidanceMagnitude = Math.pow(this.SHARPNESS, -(distance - 10));
             avoidanceVector.setLength(avoidanceMagnitude);
             finalVector.add(avoidanceVector);
         }
