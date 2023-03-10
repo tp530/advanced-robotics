@@ -100,6 +100,10 @@ export class ChangeOfLeaderBoid extends Boid {
 
     private allowChanceToBecomeLeader(ruleArguments: RuleArguments) {
         const changeOfLeaderOptions = ruleArguments.simParams.changeOfLeaderBoidOptions;
+        // don't bother doing all the calculations if there's no chance of becoming a leader
+        if (changeOfLeaderOptions.becomeLeaderProbability <= 0) {
+            return;
+        }
         const x = this.calculateEccentricity(
             ruleArguments.neighbours,
             ruleArguments.simParams.visibilityThreshold,
