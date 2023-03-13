@@ -111,7 +111,7 @@ export class Boid {
     protected generateIndividualColour(photorealisticRendering: boolean) {
         let lightnessAdjust: number;
         if (photorealisticRendering) {
-            lightnessAdjust = Math.random() * 0.8;
+            lightnessAdjust = Math.random() * 0.6;
         } else {
             lightnessAdjust = Math.random() * 0.4 - 0.2;
         }

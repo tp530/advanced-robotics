@@ -67,7 +67,7 @@ export class BoidSimulation extends Simulation {
 
         visibilityThreshold: 50,
         worldDimens: Bounds3D.centredXZ(200, 200, 100),
-        photorealisticRendering: false,
+        photorealisticRendering: true,
         randomnessPerTimestep: 0.01,
         randomnessLimit: 0.1,
         predNewTargetChance: 0.3,

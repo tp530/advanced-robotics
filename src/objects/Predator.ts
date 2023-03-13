@@ -13,7 +13,7 @@ export class Predator extends Boid{
 
     protected hunting: boolean =  false;
     protected huntAccelMult = 5;
-    maintainDistance = 30;
+    maintainDistance = 70;
 
 
     constructor(options: BoidOptions){

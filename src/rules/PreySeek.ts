@@ -6,7 +6,7 @@ import { Predator } from "../objects/Predator";
 export class PreySeekRule extends Rule {
     readonly name = "Seek Prey Rule";
 
-    private static FILL: number = 100;
+    private static FILL: number = 400;
 
     hunger:number = PreySeekRule.FILL;
 
@@ -35,9 +35,10 @@ export class PreySeekRule extends Rule {
 
         if(this.hunger > 0){
             output = this.getMeanTarget(args);
+            output.add(new THREE.Vector3(0,thisBoid.maintainDistance,0));
             output.sub(thisBoid.position);
             if(output.length() < thisBoid.maintainDistance){
-                return new THREE.Vector3;
+                return output.divideScalar(10);
             }
             return output;
         }
