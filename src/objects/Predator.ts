@@ -13,7 +13,8 @@ export class Predator extends Boid{
 
     protected hunting: boolean =  false;
     protected huntAccelMult = 5;
-    maintainDistance = 70;
+    protected huntSpeedMult = 1.2;
+    maintainDistance = 200;
 
 
     constructor(options: BoidOptions){
@@ -42,6 +43,7 @@ export class Predator extends Boid{
     public setHunting(){
         if(!this.hunting){
             this.acceleration *= this.huntAccelMult;
+            this.maxSpeed *= this.huntSpeedMult;
             this.hunting = true;
         }
     }
@@ -49,6 +51,7 @@ export class Predator extends Boid{
     public setSeeking(){
         if(this.hunting){
             this.acceleration /= this.huntAccelMult;
+            this.maxSpeed /= this.huntSpeedMult;
             this.hunting = false;
         }
     }
@@ -60,6 +63,9 @@ export class Predator extends Boid{
         
         boids.forEach(b => {
             let prob = 1/this.mesh.position.distanceTo(b.mesh.position)
+            if(Number.isNaN(prob)){
+                prob = 1;
+            }
             sum += prob;
             probabilities.push(prob);
         });
