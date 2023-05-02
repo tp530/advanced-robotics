@@ -23,6 +23,7 @@ import { obstacles1 } from "./worlds/Obstacles1";
 import { Cylinder } from "./objects/Cylinder";
 import { ObstacleAvoidanceRule } from "./rules/ObstacleAvoidanceRule";
 import { Rule } from "./rules/Rule";
+import FileSaver from 'file-saver';
 
 export interface BoidSimulationParams {
     boidCount: number;
@@ -66,19 +67,10 @@ export class BoidSimulation extends Simulation {
 
     boids: Boid[] = [];
 
-    simParams: BoidSimulationParams = {
-        boidCount: 50,
-        boidType: BoidType.Normal,
-        visibilityThreshold: 50,
-        maxSpeed: 0.5,
-        acceleration: 0.01,
-        worldName: defaultWorld.name,
-        worldDimens: WorldTools.getWorldByName(this.worlds, this.currentWorldName).get3DBoundaries(),
-        rendering: RenderingModes.Simple,
-        cameraTracking: CameraTrackingModes.None,
-        randomnessPerTimestep: 0.01,
-        randomnessLimit: 0.1,
-    };
+    simParams: BoidSimulationParams = this.getParamsFromUrl();
+
+    boidSteps: string[] = [];
+    recordSteps: boolean = false;
 
     // initial world will get set in constructor by calling reloadWorld
     private obstacleAvoidRule = new ObstacleAvoidanceRule(10, {world: defaultWorld});
@@ -99,6 +91,33 @@ export class BoidSimulation extends Simulation {
     private sun?: THREE.Vector3;
     private generator?: THREE.PMREMGenerator;
     private renderTarget?: THREE.WebGLRenderTarget;
+
+    private getParamsFromUrl(): BoidSimulationParams {
+        let params: BoidSimulationParams = {
+            boidCount: 50,
+            boidType: BoidType.Normal,
+            visibilityThreshold: 50,
+            maxSpeed: 0.5,
+            acceleration: 0.01,
+            worldName: defaultWorld.name,
+            worldDimens: WorldTools.getWorldByName(this.worlds, this.currentWorldName).get3DBoundaries(),
+            rendering: RenderingModes.Simple,
+            cameraTracking: CameraTrackingModes.None,
+            randomnessPerTimestep: 0.01,
+            randomnessLimit: 0.1,
+        };
+
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        if (urlParams.has("boidCount")) {
+            let count = urlParams.get("boidCount");
+            if (count != null) {
+                params.boidCount = parseInt(count);
+            }
+        }
+
+        return params;
+    }
 
     constructor(params?: BoidSimulationParams) {
         super();
@@ -284,6 +303,27 @@ export class BoidSimulation extends Simulation {
 
         super.update();
 
+        if (this.recordSteps) {
+            this.recordBoidStep();
+            if (this.boidSteps.length === 60 * 10) {
+                this.recordSteps = false;
+                let blob = new Blob([this.boidSteps.join("\n")], {type: "text/plain;charset=utf-8"});
+                FileSaver.saveAs(blob, "boid_flight_paths.csv");
+                this.boidSteps = [];
+            }
+        }
+
+    }
+
+    recordBoidStep(): void {
+        let currentPositions: number[] = [];
+        for (let boid of this.boids) {
+            let pos = boid.position;
+            currentPositions.push(pos.x);
+            currentPositions.push(pos.y);
+            currentPositions.push(pos.z);
+        }
+        this.boidSteps.push(currentPositions.join(','));
     }
 
     getFlockTarget(): THREE.Vector3 {
@@ -325,6 +365,9 @@ export class BoidSimulation extends Simulation {
 
         // Remove old boids
         this.boids = [];
+
+        // Delete recorded steps
+        this.boidSteps = [];
 
         // Arena
         this.arena = new Arena(this.simParams);

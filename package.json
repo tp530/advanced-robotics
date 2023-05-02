@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.5",
     "@types/three": "^0.149.0",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "@typescript-eslint/parser": "^5.52.0",
@@ -22,6 +23,7 @@
   "dependencies": {
     "@types/dat.gui": "^0.7.7",
     "dat.gui": "^0.7.9",
+    "file-saver": "^2.0.5",
     "three": "^0.149.0"
   }
 }
