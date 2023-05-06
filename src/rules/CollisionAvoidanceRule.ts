@@ -9,6 +9,8 @@ export interface CollisionAvoidanceRuleOptions extends RuleOptions {
 export class CollisionAvoidanceRule extends Rule {
     readonly name = "Collision Avoidance";
 
+    readonly alwaysApplyToLeaderBoids = true;
+
     /**
      * How "aggressive" the collision avoidance should be.
      * Higher values will allow the boids to be closer together, and will produce

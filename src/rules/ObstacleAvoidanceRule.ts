@@ -11,6 +11,8 @@ export interface ObstacleAvoiodanceRuleOptions extends RuleOptions {
 export class ObstacleAvoidanceRule extends Rule {
     readonly name = "Avoid Obstacle Boundary";
 
+    readonly alwaysApplyToLeaderBoids = true;
+
     /**
      * How "sharp" the obstacle boundary should be.
      * Higher values will produce snappier changes in direction.
