@@ -1,5 +1,5 @@
 import { BoidType } from "./BoidGenerator";
-import { BoidBehaviour, BoidSimulation, BoidSimulationParams, CameraTrackingModes, RenderingModes } from "./BoidSimulation";
+import { BoidBehaviour, BoidSimulation, BoidSimulationParams, CameraTrackingModes, RecordingModes, RenderingModes } from "./BoidSimulation";
 import { WorldTools } from "./objects/world/WorldTools";
 import { defaultWorld } from "./worlds/Default";
 
@@ -10,6 +10,7 @@ export class UrlParams {
             behaviour: BoidBehaviour.Reynolds,
             boidCount: 50,
             boidType: BoidType.Normal,
+            recording: RecordingModes.None,
             visibilityThreshold: 50,
             maxSpeed: 0.5,
             acceleration: 0.01,

@@ -1,6 +1,6 @@
 import { Simulation } from "./Simulation";
 import { Boid, BoidId } from "./objects/Boid";
-import { GUI } from "dat.gui";
+import { GUI, GUIController } from "dat.gui";
 import { Floor } from "./objects/Floor";
 import { SeparationRule } from "./rules/SeparationRule";
 import { CohesionRule } from "./rules/CohesionRule";
@@ -30,6 +30,7 @@ import { UrlParams } from "./UrlParams";
 
 export interface BoidSimulationParams {
     behaviour: BoidBehaviour;
+    recording: RecordingModes;
     boidCount: number;
     boidType: BoidType;
     visibilityThreshold: number;
@@ -62,6 +63,18 @@ export enum CameraTrackingModes {
     FlockCenterFPV = "Flock Centre FPV"
 }
 
+export enum RecordingModes {
+    None = "None",
+    Record5 = "5 sec",
+    Record5r = "5 sec + restart",
+    Record10 = "10 sec",
+    Record10r = "10 sec + restart",
+    Record15 = "15 sec",
+    Record15r = "5 sec + restart",
+    Record30 = "30 sec",
+    Record30r = "30 sec + restart"
+}
+
 export class BoidSimulation extends Simulation {
     controlsGui: GUI;
     changeOfLeaderGui?: GUI;
@@ -84,7 +97,10 @@ export class BoidSimulation extends Simulation {
     simParams: BoidSimulationParams = UrlParams.get();
 
     boidSteps: string[] = [];
-    recordSteps: boolean = false;
+    recordingTime: number = 0;
+    recordingRestart: boolean = false;
+    recordingSelectElement: HTMLSelectElement;
+    recordingSpan: HTMLSpanElement;
 
     // initial world will get set in constructor by calling reloadWorld
     private static obstacleAvoidRule = new ObstacleAvoidanceRule(10, {world: defaultWorld});
@@ -123,6 +139,37 @@ export class BoidSimulation extends Simulation {
         this.controlsGui.add(this.simParams, "behaviour", this.behaviourNames).name("Behaviour");
         this.controlsGui.add(this.simParams, "rendering", this.getRenderingModeNames()).name("Rendering");
         this.controlsGui.add(this.simParams, "cameraTracking", this.getCameraTrackingModeNames()).name("Tracking");
+        this.controlsGui.add(this.simParams, "recording", this.getRecordingModeNames()).name("Recording");
+
+        let select = document.querySelector('div.c option[value="' + RecordingModes.Record5 + '"]')?.parentElement;
+        if (select instanceof HTMLSelectElement) {
+            this.recordingSelectElement = select;
+        } else {
+            throw new Error("Recording <select> not found.");
+        }
+
+        let span = select.parentElement?.parentElement?.firstChild;
+        if (span instanceof HTMLSpanElement) {
+            this.recordingSpan = span;
+        } else {
+            throw new Error("Recording <span> not found.");
+        }
+
+        const instance = this;
+        this.recordingSelectElement.addEventListener("change", function() {
+            if (instance.recordingSelectElement.value !== RecordingModes.None) {
+                // Start recording
+                let recInfo = instance.recordingSelectElement.value;
+                if (recInfo.includes(" + restart")) {
+                    instance.recordingRestart = true;
+                    recInfo = recInfo.replace(" + restart", "");
+                }
+                instance.recordingTime = parseInt(recInfo.replace(" sec", ""));
+                instance.recordingSelectElement.disabled = true;
+                instance.recordingSpan.style.color = "#ef2929";
+            }
+        });
+
         this.controlsGui.add(this.simParams, "boidCount", 10, 200).name("Boid count");
         this.controlsGui.add(this.simParams, "maxSpeed", 0.1, 2, 0.01).name("Max speed");
         this.controlsGui
@@ -187,6 +234,10 @@ export class BoidSimulation extends Simulation {
 
     getCameraTrackingModeNames(): string[] {
         return Object.values(CameraTrackingModes);
+    }
+
+    getRecordingModeNames(): string[] {
+        return Object.values(RecordingModes);
     }
 
     initializePhotorealisticRendering() {
@@ -290,9 +341,11 @@ export class BoidSimulation extends Simulation {
         // Reload the world if needed
         if (BoidSimulation.currentWorldName !== this.simParams.worldName ||
             this.currentBehaviour!== this.simParams.behaviour ||
-            this.currentRendering !== this.simParams.rendering) {
+            this.currentRendering !== this.simParams.rendering ||
+            this.recordingRestart === true) {
             this.reloadWorld();
             this.updateGUI();
+            this.recordingRestart = false;
         }
 
         // update boids before updating base simulation to rerender
@@ -345,17 +398,21 @@ export class BoidSimulation extends Simulation {
                 break;
         }
 
-        super.update();
-
-        if (this.recordSteps) {
+        if (this.recordingTime > 0) {
             this.recordBoidStep();
-            if (this.boidSteps.length === 60 * 10) {
-                this.recordSteps = false;
+            if (this.boidSteps.length === 60 * this.recordingTime) {
+                this.simParams.recording = RecordingModes.None;
+                this.recordingSelectElement.value = RecordingModes.None;
+                this.recordingTime = 0;
+                this.recordingSelectElement.disabled = false;
+                this.recordingSpan.style.color = "#eee";
                 let blob = new Blob([this.boidSteps.join("\n")], {type: "text/plain;charset=utf-8"});
                 FileSaver.saveAs(blob, "boid_flight_paths.csv");
                 this.boidSteps = [];
             }
         }
+
+        super.update();
 
     }
 
@@ -487,4 +544,5 @@ export class BoidSimulation extends Simulation {
         }
         return neighbours;
     }
+
 }
