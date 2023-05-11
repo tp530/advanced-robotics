@@ -6,9 +6,9 @@ A live demo of the app is available [here](https://tp530.github.io/advanced-robo
 
 You can try one of the example links below to load a specific configuration:
 
-- [Obstacles with photorealistic rendering](https://tp530.github.io/advanced-robotics/?worldName=obstacles&rendering=photorealistic)
+- [Obstacles with photorealistic rendering](https://tp530.github.io/advanced-robotics/?worldName=Obstacles&rendering=photorealistic)
 
-- [First-person view (i.e., flying with the flock)](https://tp530.github.io/advanced-robotics/?worldName=obstacles&rendering=photorealistic&cameraTracking=flockCenterFpv)
+- [First-person view (i.e., flying with the flock)](https://tp530.github.io/advanced-robotics/?worldName=Obstacles&rendering=photorealistic&cameraTracking=flockCenterFpv)
 
 - [Change of leadership example](https://tp530.github.io/advanced-robotics/?behaviour=leadership)
 
