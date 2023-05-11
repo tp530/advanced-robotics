@@ -47,7 +47,6 @@ export class Cylinder {
             options.description.basePoint.z
         );
 
-        /*
         const wireframeGeometry = new THREE.CylinderGeometry(
             options.description.radius,
             options.description.radius,
@@ -67,12 +66,7 @@ export class Cylinder {
             options.description.basePoint.z
         );
 
-        */
-
-        // this.mesh = [bodyMesh, wireframe];
-
-        this.mesh = [bodyMesh];
-
+        this.mesh = [bodyMesh, wireframe];
 
     }
 
