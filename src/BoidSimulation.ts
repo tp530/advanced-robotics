@@ -1,30 +1,36 @@
-import {Simulation} from "./Simulation";
-import {Boid} from "./objects/Boid";
-import {GUI} from "dat.gui";
-import {Floor} from "./objects/Floor";
-import {SeparationRule} from "./rules/SeparationRule";
-import {CohesionRule} from "./rules/CohesionRule";
-import {AlignmentRule} from "./rules/AlignmentRule";
-import {WorldBoundaryRule} from "./rules/WorldBoundaryRule";
-import {CollisionAvoidanceRule} from "./rules/CollisionAvoidanceRule";
-import {Arena} from "./objects/Arena";
-import {Water} from "./objects/Water";
-import {Sky} from "./objects/Sky";
+import { Simulation } from "./Simulation";
+import { Boid, BoidId } from "./objects/Boid";
+import { GUI } from "dat.gui";
+import { Floor } from "./objects/Floor";
+import { SeparationRule } from "./rules/SeparationRule";
+import { CohesionRule } from "./rules/CohesionRule";
+import { AlignmentRule } from "./rules/AlignmentRule";
+import { WorldBoundaryRule } from "./rules/WorldBoundaryRule";
+import { CollisionAvoidanceRule } from "./rules/CollisionAvoidanceRule";
+import { Arena } from "./objects/Arena";
+import { ChangeOfLeaderBoidOptions } from "./objects/ChangeOfLeaderBoid";
+import { Water } from "./objects/Water";
+import { Sky } from "./objects/Sky";
 import * as THREE from "three";
-import {ShaderMaterial} from "three";
-import {SunParams} from "./objects/Sun";
-import {World} from "./objects/world/World";
-import {defaultWorld} from "./worlds/Default";
-import {smallWorld} from "./worlds/SmallWorld";
-import {Bounds3D} from "./Bounds3D";
-import {WorldTools} from "./objects/world/WorldTools";
-import {BoidGenerator, BoidType} from "./BoidGenerator";
-import { obstacles1 } from "./worlds/Obstacles1";
+import { SunParams } from "./objects/Sun";
+import { ShaderMaterial } from "three";
+import { World } from "./objects/world/World";
+import { defaultWorld } from "./worlds/Default";
+import { smallWorld } from "./worlds/SmallWorld";
+import { Bounds3D } from "./Bounds3D";
+import { WorldTools } from "./objects/world/WorldTools";
+import { FollowLeaderRule } from "./rules/FollowLeaderRule";
+import { BoidGenerator, BoidType } from "./BoidGenerator";
+import { obstacles } from "./worlds/Obstacles";
 import { Cylinder } from "./objects/Cylinder";
 import { ObstacleAvoidanceRule } from "./rules/ObstacleAvoidanceRule";
 import { Rule } from "./rules/Rule";
+import FileSaver from 'file-saver';
+import { UrlParams } from "./UrlParams";
 
 export interface BoidSimulationParams {
+    behaviour: BoidBehaviour;
+    recording: RecordingModes;
     boidCount: number;
     boidType: BoidType;
     visibilityThreshold: number;
@@ -32,48 +38,81 @@ export interface BoidSimulationParams {
     acceleration: number;
     worldName: string;
     worldDimens: Bounds3D;
-    photorealisticRendering: boolean;
+    rendering: RenderingModes;
+    cameraTracking: CameraTrackingModes;
     randomnessPerTimestep: number;
     randomnessLimit: number;
+    changeOfLeaderBoidOptions: ChangeOfLeaderBoidOptions;
+}
+
+export enum BoidBehaviour {
+    Reynolds = "Reynolds’ Algorithm",
+    ChangeOfLeadership = "Change of Leadership"
+}
+
+export enum RenderingModes {
+    Simple = "Simple",
+    Photorealistic = "Photorealistic"
+}
+
+export enum CameraTrackingModes {
+    None = "None",
+    FirstBoid = "First Boid",
+    FirstBoidFPV = "First Boid FPV",
+    FlockCenter = "Flock Centre",
+    FlockCenterFPV = "Flock Centre FPV"
+}
+
+export enum RecordingModes {
+    None = "None",
+    Record5 = "5 sec",
+    Record5r = "5 sec + restart",
+    Record10 = "10 sec",
+    Record10r = "10 sec + restart",
+    Record15 = "15 sec",
+    Record15r = "15 sec + restart",
+    Record30 = "30 sec",
+    Record30r = "30 sec + restart"
 }
 
 export class BoidSimulation extends Simulation {
-
     controlsGui: GUI;
+    changeOfLeaderGui?: GUI;
 
-    worlds: World[] = [
-        defaultWorld, smallWorld, obstacles1
+    public static worlds: World[] = [
+        defaultWorld, smallWorld, obstacles
     ];
 
-    worldNames: string[] = WorldTools.getNames(this.worlds);
+    public static worldNames: string[] = WorldTools.getNames(BoidSimulation.worlds);
 
-    currentWorldName: string = defaultWorld.name;
+    behaviourNames: string[] = Object.values(BoidBehaviour);
+
+    public static currentWorldName: string = defaultWorld.name;
+    currentRendering: string = RenderingModes.Simple;
+    currentBehaviour: string = BoidBehaviour.Reynolds;
 
     boids: Boid[] = [];
+    private nextBoidId: BoidId = 0;
 
-    simParams: BoidSimulationParams = {
-        boidCount: 50,
-        boidType: BoidType.Normal,
-        visibilityThreshold: 50,
-        maxSpeed: 0.5,
-        acceleration: 0.01,
-        worldName: defaultWorld.name,
-        worldDimens: WorldTools.getWorldByName(this.worlds, this.currentWorldName).get3DBoundaries(),
-        photorealisticRendering: false,
-        randomnessPerTimestep: 0.01,
-        randomnessLimit: 0.1,
-    };
+    simParams: BoidSimulationParams = UrlParams.get();
+
+    boidSteps: string[] = [];
+    recordingTime: number = 0;
+    recordingRestart: boolean = false;
+    recordingSelectElement: HTMLSelectElement;
+    recordingSpan: HTMLSpanElement;
 
     // initial world will get set in constructor by calling reloadWorld
-    private obstacleAvoidRule = new ObstacleAvoidanceRule(10, {world: defaultWorld});
+    private static obstacleAvoidRule = new ObstacleAvoidanceRule(10, {world: defaultWorld});
 
-    rules: Rule[] = [
+    public static rules: Rule[] = [
         new SeparationRule(0.8),
         new CohesionRule(1),
         new AlignmentRule(1),
         new WorldBoundaryRule(10),
         new CollisionAvoidanceRule(10),
-        this.obstacleAvoidRule,
+        new FollowLeaderRule(5),
+        this.obstacleAvoidRule
     ];
 
     private floor?: Floor;
@@ -96,7 +135,41 @@ export class BoidSimulation extends Simulation {
             hideable: false,
         });
 
-        this.controlsGui.add(this.simParams, "worldName", this.worldNames).name("World");
+        this.controlsGui.add(this.simParams, "worldName", BoidSimulation.worldNames).name("World");
+        this.controlsGui.add(this.simParams, "behaviour", this.behaviourNames).name("Behaviour");
+        this.controlsGui.add(this.simParams, "rendering", this.getRenderingModeNames()).name("Rendering");
+        this.controlsGui.add(this.simParams, "cameraTracking", this.getCameraTrackingModeNames()).name("Tracking");
+        this.controlsGui.add(this.simParams, "recording", this.getRecordingModeNames()).name("Recording");
+
+        let select = document.querySelector('div.c option[value="' + RecordingModes.Record5 + '"]')?.parentElement;
+        if (select instanceof HTMLSelectElement) {
+            this.recordingSelectElement = select;
+        } else {
+            throw new Error("Recording <select> not found.");
+        }
+
+        let span = select.parentElement?.parentElement?.firstChild;
+        if (span instanceof HTMLSpanElement) {
+            this.recordingSpan = span;
+        } else {
+            throw new Error("Recording <span> not found.");
+        }
+
+        const instance = this;
+        this.recordingSelectElement.addEventListener("change", function() {
+            if (instance.recordingSelectElement.value !== RecordingModes.None) {
+                // Start recording
+                let recInfo = instance.recordingSelectElement.value;
+                if (recInfo.includes(" + restart")) {
+                    instance.recordingRestart = true;
+                    recInfo = recInfo.replace(" + restart", "");
+                }
+                instance.recordingTime = parseInt(recInfo.replace(" sec", ""));
+                instance.recordingSelectElement.disabled = true;
+                instance.recordingSpan.style.color = "#ef2929";
+            }
+        });
+
         this.controlsGui.add(this.simParams, "boidCount", 10, 200).name("Boid count");
         this.controlsGui.add(this.simParams, "maxSpeed", 0.1, 2, 0.01).name("Max speed");
         this.controlsGui
@@ -114,11 +187,57 @@ export class BoidSimulation extends Simulation {
         // Controls to change rule weights
         const ruleWeightsGui = this.controlsGui.addFolder("Rule weights");
         ruleWeightsGui.open();
-        for (const rule of this.rules) {
+        for (const rule of BoidSimulation.rules) {
             ruleWeightsGui.add(rule, "weight", rule.minWeight, rule.maxWeight, 0.1).name(rule.name);
         }
 
+        // Controls for Change of Leader behaviour
+        if (this.simParams.behaviour === BoidBehaviour.ChangeOfLeadership) {
+            this.addChangeOfLeaderGui();
+        }
+
         this.reloadWorld();
+    }
+
+    addChangeOfLeaderGui(): void {
+        this.changeOfLeaderGui = this.controlsGui.addFolder("Change of Leader");
+        this.changeOfLeaderGui.open();
+        this.changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "maxLeaderTimestep", 100, 400, 20)
+            .name("Timesteps");
+        this.changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "eccentricityThreshold", 0, 1, 0.05)
+            .name("Eccentricity threshold");
+        this.changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "neighbourCountThreshold", 0, 15, 1)
+            .name("Min neighbours");
+        this.changeOfLeaderGui
+            .add(
+                this.simParams.changeOfLeaderBoidOptions,
+                "becomeLeaderProbability",
+                0,
+                0.005,
+                0.0001,
+            )
+            .name("Leader probability");
+        this.changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "peakSpeedMultiplier", 1, 2, 0.05)
+            .name("Escape speed");
+        this.changeOfLeaderGui
+            .add(this.simParams.changeOfLeaderBoidOptions, "peakSpeedTimestepFraction", 0, 1, 0.05)
+            .name("Speed profile");
+    }
+
+    getRenderingModeNames(): string[] {
+        return Object.values(RenderingModes);
+    }
+
+    getCameraTrackingModeNames(): string[] {
+        return Object.values(CameraTrackingModes);
+    }
+
+    getRecordingModeNames(): string[] {
+        return Object.values(RecordingModes);
     }
 
     initializePhotorealisticRendering() {
@@ -165,7 +284,7 @@ export class BoidSimulation extends Simulation {
     }
 
     updateSun() {
-        if (!this.simParams.photorealisticRendering)
+        if (this.simParams.rendering !== RenderingModes.Photorealistic)
             throw new Error("Photorealistic rendering is disabled.");
         if (
             this.sun === undefined ||
@@ -197,52 +316,164 @@ export class BoidSimulation extends Simulation {
         this.scene.environment = this.renderTarget.texture;
     }
 
-    update() {
+    updateGUI(): void {
+
+        if (this.currentBehaviour !== this.simParams.behaviour) {
+            switch (this.simParams.behaviour) {
+                case BoidBehaviour.Reynolds:
+                    if (this.changeOfLeaderGui !== undefined) {
+                        this.controlsGui.removeFolder(this.changeOfLeaderGui);
+                        this.changeOfLeaderGui = undefined;
+                    }
+                    break;
+                case BoidBehaviour.ChangeOfLeadership:
+                    if (this.changeOfLeaderGui === undefined) {
+                        this.addChangeOfLeaderGui();
+                    }
+                    break;
+            }
+            this.currentBehaviour = this.simParams.behaviour;
+        }
+    }
+
+    update(): void {
 
         // Reload the world if needed
-        if (this.currentWorldName !== this.simParams.worldName) {
+        if (BoidSimulation.currentWorldName !== this.simParams.worldName ||
+            this.currentBehaviour!== this.simParams.behaviour ||
+            this.currentRendering !== this.simParams.rendering ||
+            this.recordingRestart === true) {
             this.reloadWorld();
+            this.updateGUI();
+            this.recordingRestart = false;
         }
 
         // update boids before updating base simulation to rerender
         this.updateBoidCount();
 
         this.boids.map((boid) =>
-            // boid.update(this.getBoidNeighbours(boid), this.steeringForceCoefficients),
-            boid.update(this.rules, {
+            boid.update(BoidSimulation.rules, {
                 neighbours: this.getBoidNeighbours(boid),
-                simParams: this.simParams
-            })
+                simParams: this.simParams,
+            }),
         );
 
         if (
-            this.simParams.photorealisticRendering &&
+            this.simParams.rendering === RenderingModes.Photorealistic &&
             this.water !== undefined &&
             this.water.material instanceof ShaderMaterial
         ) {
             this.water.material.uniforms["time"].value += 1.0 / 60.0;
         }
 
+        switch (this.simParams.cameraTracking) {
+            case CameraTrackingModes.FlockCenter:
+            this.controls.target = this.getFlockCenter();
+                break;
+            case CameraTrackingModes.FirstBoid:
+                if (this.boids.length > 0) {
+                    this.controls.target = this.boids[0].position;
+                }
+                break;
+            case CameraTrackingModes.FirstBoidFPV:
+                if (this.boids.length > 0) {
+                    this.camera.position.set(
+                        this.boids[0].position.x,
+                        this.boids[0].position.y,
+                        this.boids[0].position.z
+                    );
+                    this.controls.target = this.boids[0].position.clone().add(this.boids[0].actualVelocity);
+                }
+                break;
+                case CameraTrackingModes.FlockCenterFPV:
+                    if (this.boids.length > 0) {
+                        const center = this.getFlockCenter();
+                        this.camera.position.set(
+                            center.x,
+                            center.y,
+                            center.z
+                        );
+                        this.controls.target = this.camera.position.clone().add(this.getFlockTarget());
+                    }
+                break;
+        }
+
+        if (this.recordingTime > 0) {
+            this.recordBoidStep();
+            if (this.boidSteps.length === 60 * this.recordingTime) {
+                this.simParams.recording = RecordingModes.None;
+                this.recordingSelectElement.value = RecordingModes.None;
+                this.recordingTime = 0;
+                this.recordingSelectElement.disabled = false;
+                this.recordingSpan.style.color = "#eee";
+                let blob = new Blob([this.boidSteps.join("\n")], {type: "text/plain;charset=utf-8"});
+                FileSaver.saveAs(blob, "boid_flight_paths.csv");
+                this.boidSteps = [];
+            }
+        }
+
         super.update();
+
+    }
+
+    recordBoidStep(): void {
+        let currentPositions: number[] = [];
+        for (let boid of this.boids) {
+            let pos = boid.position;
+            currentPositions.push(pos.x);
+            currentPositions.push(pos.y);
+            currentPositions.push(pos.z);
+        }
+        this.boidSteps.push(currentPositions.join(','));
+    }
+
+    getFlockTarget(): THREE.Vector3 {
+        if (this.boids.length === 0) {
+            return new THREE.Vector3();
+        }
+        const alignment = new THREE.Vector3();
+
+        for (const neighbour of this.boids) {
+            alignment.add(neighbour.actualVelocity);
+        }
+        alignment.divideScalar(this.boids.length);
+        return alignment;
+    }
+
+    getFlockCenter(): THREE.Vector3 {
+        if (this.boids.length === 0) {
+            return new THREE.Vector3();
+        } 
+        let sumX = 0;
+        let sumY = 0;
+        let sumZ = 0;
+        for (const boid of this.boids) {
+            sumX += boid.position.x;
+            sumY += boid.position.y;
+            sumZ += boid.position.z;
+        }
+        return new THREE.Vector3(sumX/this.boids.length, sumY/this.boids.length, sumZ/this.boids.length);
     }
 
     reloadWorld() {
-
-        const world = WorldTools.getWorldByName(this.worlds, this.simParams.worldName);
+        const world = WorldTools.getWorldByName(BoidSimulation.worlds, this.simParams.worldName);
         this.simParams.worldDimens = world.get3DBoundaries();
 
         this.clearScene();
 
-        this.obstacleAvoidRule.setWorld(world);
+        BoidSimulation.obstacleAvoidRule.setWorld(world);
 
         // Remove old boids
         this.boids = [];
+
+        // Delete recorded steps
+        this.boidSteps = [];
 
         // Arena
         this.arena = new Arena(this.simParams);
         this.addToScene(this.arena.mesh);
 
-        if (this.simParams.photorealisticRendering) {
+        if (this.simParams.rendering === RenderingModes.Photorealistic) {
             this.initializePhotorealisticRendering();
         } else {
             // Floor
@@ -254,12 +485,13 @@ export class BoidSimulation extends Simulation {
         for (const description of world.obstacles.cylinders) {
             const cylinder = new Cylinder({
                 description: description, 
-                photorealisticRendering: this.simParams.photorealisticRendering
+                rendering: this.simParams.rendering
             });
             this.addToScene(cylinder.mesh);
         }
 
-        this.currentWorldName = this.simParams.worldName;
+        BoidSimulation.currentWorldName = this.simParams.worldName;
+        this.currentRendering = this.simParams.rendering;
 
     }
 
@@ -272,11 +504,11 @@ export class BoidSimulation extends Simulation {
         let difference = this.simParams.boidCount - this.boids.length;
         while (difference > 0) {
             // generate new boids
-            const boid = BoidGenerator.generateBoidWithRandomPosAndVec({
+            const boid = BoidGenerator.generateBoidWithRandomPosAndVec(this.newBoidId(), {
                 boidType: this.simParams.boidType,
                 positionBounds: this.simParams.worldDimens,
                 acceleration: this.simParams.acceleration,
-                photorealisticRendering: this.simParams.photorealisticRendering,
+                rendering: this.simParams.rendering
             });
             this.addToScene(boid.mesh);
             this.boids.push(boid);
@@ -292,6 +524,12 @@ export class BoidSimulation extends Simulation {
             this.removeFromScene(boid.mesh);
             difference++;
         }
+    }
+
+    private newBoidId(): BoidId {
+        const id = this.nextBoidId;
+        this.nextBoidId++;
+        return id;
     }
 
     getBoidNeighbours(boid: Boid): Boid[] {

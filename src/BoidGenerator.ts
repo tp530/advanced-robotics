@@ -1,6 +1,8 @@
 import { Bounds3D } from "./Bounds3D";
-import { Boid } from "./objects/Boid";
+import { Boid, BoidId } from "./objects/Boid";
 import * as THREE from "three";
+import { RenderingModes } from "./BoidSimulation";
+import {ChangeOfLeaderBoid} from "./objects/ChangeOfLeaderBoid";
 
 /*
  * All available types of boid that can be generated.
@@ -8,6 +10,7 @@ import * as THREE from "three";
  */
 export enum BoidType {
     Normal,
+    ChangeOfLeader
 }
 
 export class BoidGenerator {
@@ -17,17 +20,18 @@ export class BoidGenerator {
      * For any bounds that aren't passed, sensible defaults are used.
      */
     static generateBoidWithRandomPosAndVec(
+        id: BoidId,
         options?: {
             boidType?: BoidType;
             positionBounds?: Bounds3D;
             velocityBounds?: Bounds3D;
             acceleration?: number;
-            photorealisticRendering: boolean;
+            rendering: RenderingModes;
         },
     ): Boid {
         const type = options?.boidType ?? BoidType.Normal;
 
-        // default position and velocity bounds
+        // Default position and velocity bounds
         const minXPos = options?.positionBounds?.xMin ?? -100;
         const maxXPos = options?.positionBounds?.xMax ?? 100;
         const minYPos = options?.positionBounds?.yMin ?? 0;
@@ -44,7 +48,7 @@ export class BoidGenerator {
 
         const acceleration = options?.acceleration ?? 0.01;
 
-        const photorealisticRendering = options?.photorealisticRendering ?? false;
+        const rendering = options?.rendering ?? RenderingModes.Simple;
 
         const randomPosition = new THREE.Vector3(
             Math.random() * (maxXPos - minXPos) + minXPos,
@@ -58,14 +62,21 @@ export class BoidGenerator {
             Math.random() * (maxZVel - minZVel) + minZVel,
         );
 
-        // generate the correct type of boid
+        // Generate the correct type of boid
         switch (type) {
             case BoidType.Normal:
-                return new Boid({
+                return new Boid(id, {
                     position: randomPosition,
                     velocity: randomVelocity,
                     acceleration,
-                    photorealisticRendering,
+                    rendering,
+                });
+            case BoidType.ChangeOfLeader:
+                return new ChangeOfLeaderBoid(id, {
+                    position: randomPosition,
+                    velocity: randomVelocity,
+                    acceleration,
+                    rendering,
                 });
         }
     }

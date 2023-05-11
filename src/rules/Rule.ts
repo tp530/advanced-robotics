@@ -19,6 +19,8 @@ export abstract class Rule {
     readonly minWeight: number;
     readonly maxWeight: number;
 
+    readonly alwaysApplyToLeaderBoids: boolean = false;
+
     // name to show on the GUI controls
     abstract readonly name: string;
 

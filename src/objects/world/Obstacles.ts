@@ -8,7 +8,6 @@ export class Obstacles implements IObstacles {
             for (const cylinder of data.cylinders) {
                 this.cylinders.push(new CylinderDescription(cylinder));
             }
-
         }
     }
 }

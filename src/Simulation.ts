@@ -4,8 +4,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 export class Simulation {
     protected readonly scene: THREE.Scene;
     protected renderer: THREE.WebGLRenderer;
-    private readonly camera: THREE.PerspectiveCamera;
-    private controls: OrbitControls;
+    protected readonly camera: THREE.PerspectiveCamera;
+    protected controls: OrbitControls;
 
     /**
      * Initialises the scene, renderer, camera, and controls.
@@ -44,7 +44,7 @@ export class Simulation {
         // (right-click and drag to move around)
         this.controls.screenSpacePanning = false;
         // disallow going beneath the floor
-        this.controls.maxPolarAngle = Math.PI / 2;
+        //this.controls.maxPolarAngle = Math.PI / 2;
 
         this.handleWindowResizing();
     }
