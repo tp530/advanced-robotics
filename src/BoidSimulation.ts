@@ -1,6 +1,6 @@
 import { Simulation } from "./Simulation";
 import { Boid, BoidId } from "./objects/Boid";
-import { GUI, GUIController } from "dat.gui";
+import { GUI } from "dat.gui";
 import { Floor } from "./objects/Floor";
 import { SeparationRule } from "./rules/SeparationRule";
 import { CohesionRule } from "./rules/CohesionRule";
@@ -21,7 +21,7 @@ import { Bounds3D } from "./Bounds3D";
 import { WorldTools } from "./objects/world/WorldTools";
 import { FollowLeaderRule } from "./rules/FollowLeaderRule";
 import { BoidGenerator, BoidType } from "./BoidGenerator";
-import { obstacles1 } from "./worlds/Obstacles1";
+import { obstacles } from "./worlds/Obstacles";
 import { Cylinder } from "./objects/Cylinder";
 import { ObstacleAvoidanceRule } from "./rules/ObstacleAvoidanceRule";
 import { Rule } from "./rules/Rule";
@@ -70,7 +70,7 @@ export enum RecordingModes {
     Record10 = "10 sec",
     Record10r = "10 sec + restart",
     Record15 = "15 sec",
-    Record15r = "5 sec + restart",
+    Record15r = "15 sec + restart",
     Record30 = "30 sec",
     Record30r = "30 sec + restart"
 }
@@ -80,7 +80,7 @@ export class BoidSimulation extends Simulation {
     changeOfLeaderGui?: GUI;
 
     public static worlds: World[] = [
-        defaultWorld, smallWorld, obstacles1
+        defaultWorld, smallWorld, obstacles
     ];
 
     public static worldNames: string[] = WorldTools.getNames(BoidSimulation.worlds);
@@ -485,7 +485,7 @@ export class BoidSimulation extends Simulation {
         for (const description of world.obstacles.cylinders) {
             const cylinder = new Cylinder({
                 description: description, 
-                rendering: RenderingModes.Photorealistic
+                rendering: this.simParams.rendering
             });
             this.addToScene(cylinder.mesh);
         }

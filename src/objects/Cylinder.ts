@@ -5,7 +5,7 @@ import { ICylinderDescription } from "./world/ICylinderDescription";
 
 export interface CylinderOptions {
     description: ICylinderDescription;
-    rendering: string;
+    rendering: RenderingModes;
 }
 
 export class Cylinder {
@@ -28,15 +28,16 @@ export class Cylinder {
         if (options.rendering === RenderingModes.Photorealistic) {
             material = new THREE.MeshStandardMaterial({
                 color: 0x90d74b,
-                metalness: 1,
+                metalness: 1
             });
-            material.transparent = true;
-            material.opacity = 0.75;
         } else {
-            material = new THREE.MeshBasicMaterial({
-                color: 0x90d74b,
+            material = new THREE.MeshStandardMaterial({
+                color: 0x90d74b
             });
         }
+
+        material.transparent = true;
+        material.opacity = 0.75;
 
         const bodyMesh = new THREE.Mesh(bodyGeometry, material);
 
@@ -46,6 +47,7 @@ export class Cylinder {
             options.description.basePoint.z
         );
 
+        /*
         const wireframeGeometry = new THREE.CylinderGeometry(
             options.description.radius,
             options.description.radius,
@@ -65,7 +67,12 @@ export class Cylinder {
             options.description.basePoint.z
         );
 
-        this.mesh = [bodyMesh, wireframe];
+        */
+
+        // this.mesh = [bodyMesh, wireframe];
+
+        this.mesh = [bodyMesh];
+
 
     }
 

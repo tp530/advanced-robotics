@@ -1,6 +1,6 @@
 import { World } from "../objects/world/World";
 
-export const obstacles1 = new World({
+export const obstacles = new World({
     name: "Obstacles",
     dimensions: {
         x: 200,
