@@ -2,6 +2,8 @@ import { BoidType } from "./BoidGenerator";
 import { BoidBehaviour, BoidSimulation, BoidSimulationParams, CameraTrackingModes, RecordingModes, RenderingModes } from "./BoidSimulation";
 import { WorldTools } from "./objects/world/WorldTools";
 import { defaultWorld } from "./worlds/Default";
+import { obstacles } from "./worlds/Obstacles";
+import { smallWorld } from "./worlds/SmallWorld";
 
 export class UrlParams {
 
@@ -37,7 +39,12 @@ export class UrlParams {
         let params = UrlParams.getDefaultValues();
 
         // World
-        params.worldName = UrlParams.getFromArray("worldName", BoidSimulation.worldNames) ?? defaultWorld.name;
+        const worldName = new Map<string, string>();
+        worldName.set(UrlParams.getCamelCase(defaultWorld.name), defaultWorld.name);
+        worldName.set(UrlParams.getCamelCase(smallWorld.name), smallWorld.name);
+        worldName.set(UrlParams.getCamelCase(obstacles.name), obstacles.name);
+        params.worldName = UrlParams.getFromMap<string>("worldName", worldName) ?? params.worldName;
+
         params.worldDimens = WorldTools.getWorldByName(BoidSimulation.worlds, params.worldName).get3DBoundaries();
 
         // Behaviour
@@ -78,7 +85,7 @@ export class UrlParams {
 
         // Rule weights
         for (const rule of BoidSimulation.rules) {
-            const weight = UrlParams.getFloat(UrlParams.normalizeRuleName(rule.name), rule.minWeight, rule.maxWeight, 1);
+            const weight = UrlParams.getFloat(UrlParams.getCamelCase(rule.name), rule.minWeight, rule.maxWeight, 1);
             if (weight !== undefined) {
                 rule.weight = weight;
             }
@@ -147,26 +154,12 @@ export class UrlParams {
         return undefined;
     }
 
-    private static getFromArray(paramName: string, array: string[]): string | undefined {
-        if (array.length === 0) {
-            throw new Error("The provided array is empty.");
-        }
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has(paramName)) {
-            let value: string | null = urlParams.get(paramName);
-            if (value !== null && array.includes(value)) {
-                return value;
-            }
-        }
-        return undefined;
-    }
-
-    private static normalizeRuleName(ruleName: string): string {
-        ruleName = ruleName.toLowerCase();
+    private static getCamelCase(text: string): string {
+        text = text.toLowerCase();
         for (let i = 97; i <= 122; i++) {
-            ruleName = ruleName.replaceAll(" " + String.fromCharCode(i), String.fromCharCode(i-32));
+            text = text.replaceAll(" " + String.fromCharCode(i), String.fromCharCode(i-32));
         }
-        return ruleName;
+        return text;
     }
 
 }
